@@ -1,21 +1,20 @@
+#!/usr/bin/env python
 import os
 import time
 import datetime
 import sys
-import cPickle as pickle
+import pickle
 import numpy as np
-import plotly.plotly as plotly
 
-from plotly.graph_objs import *
-import plotly.graph_objs as go
 import re
 
-import pywapi
-import ConfigParser
+import pyowm
+import configparser
 
 from PythonDaemon import Daemon
 
 import MySQLdb as mdb
+# import mysqlclient as mdb
 
 import logging
 
@@ -26,7 +25,7 @@ dname = os.path.dirname(abspath)
 os.chdir(dname)
 
 
-config = ConfigParser.ConfigParser()
+config = configparser.ConfigParser()
 config.read(dname+"/server.conf")
 
 CONN_PARAMS = (config.get('main','mysqlHost'), config.get('main','mysqlUser'),
@@ -41,7 +40,6 @@ if WEB_WEATHER:
     WEATHER_ID = config.get('main','NOAACode')
 
 OUTSIDE_ID = config.get('main','WeatherModuleID')
-
 
 
 class autoSetDaemon(Daemon):
@@ -138,9 +136,45 @@ class autoSetDaemon(Daemon):
         pickle.dump(datetime.datetime.now(),fobj)
         fobj.close()
 
+
+    def check_future(self):
+        """
+        Return the next hours temperature based on NOAA predictions.
+        """
+        weatherDict = pywapi.get_weather_from_noaa(WEATHER_ID)
+        print(weatherDict)
+        return
+
+
+    def analyze_data(self):
+        """
+        Look through the history of temperatures. Determine,
+        time to reach setpoint
+        active hours per day
+        probability of occupancy
+        """
+
+        # Given a dataset of thermostat temperature and an outdoor temperature,
+        # Determine how long it typically take to reach target setpoint
+        # Calculate heat_rate
+        heat_rate = 1 # degree/hr
+
+
+
+        # Determine the probability that the building will be occupied during
+        # each hour of the current day.
+        # tuple ((hr, probability), ...)
+        dow = datetime.datetime.today().weekday()
+        hours = np.arange(0,23)
+        P_occupied = (0,0)
+
+        return
+
+
     def run(self,debug=False):
         """
         """
+        print("running")
         plot = False
         backup = False
         while True:
@@ -149,7 +183,6 @@ class autoSetDaemon(Daemon):
                 weekList = ['MON','TUE','WED','THU','FRI','SAT','SUN']
                 curTime = datetime.datetime.now()
 
-                timeList = self.getProgTimes(actProg)
                 logging.debug("time list: " + str(timeList))
                 logging.debug("current time: " +str(curTime))
                 logging.debug("expTime: " + str(expTime))
@@ -170,6 +203,11 @@ class autoSetDaemon(Daemon):
                     cursor.execute("SELECT * FROM SmartProgram WHERE rowKey=%s" % (str(rowKey+1)))
 
                     newData = cursor.fetchall()[0]
+
+                    if occupied:
+                        analyze_data()
+                    else:
+                        check_future()
 
 
                     cursor.execute("UPDATE ThermostatSet SET moduleID=%s, targetTemp=%s, targetMode='%s', expiryTime='%s' WHERE entryNo=1"
@@ -252,9 +290,9 @@ if __name__ == "__main__":
             logging.basicConfig(filename='server.log',level=logging.DEBUG)
             daemon.run(True)
         else:
-            print "Unknown command"
+            print("Unknown command")
             sys.exit(2)
         sys.exit(0)
     else:
-        print "usage: %s start|stop|restart" % sys.argv[0]
+        print("usage: %s start|stop|restart" % sys.argv[0])
         sys.exit(2)

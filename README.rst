@@ -15,17 +15,27 @@ https://github.com/Willseph/RaspberryPiThermostat
 - Need script to generate initial mysql database.
 
 
+
+
+
 # Structure
 This system is composed of a server, one or more thermostats, and optional nodes.
 
 ## Server
-The server hosts the MySQL database and the web interface. Its purpose is to collect and analyze the sensor data from the thermostat and any additional nodes, and use that information to direct the thermostat(s). The server can be a dedicated computer or it can run on the Raspberry Pi, alongside the thermostat program.
+The server hosts the MySQL database and the web interface. Its purpose is to collect and analyze the sensor data from the thermostat and any additional nodes, and use that information to direct the thermostat(s). In essence, the server is smart. The server can be a dedicated computer or it can run on the Raspberry Pi, alongside the thermostat program.
 
 ## Thermostat
 The thermostat measures temperature and directly interfaces with the wiring of the HVAC unit. It reports all measurements to the server and its actions are determined by the server. The thermostat is intended to be the Raspberry Pi.
 
 ## Nodes
 Nodes are optional pieces of hardware that provide additional sensor data to the MySQL database such as temperatures, humidity, and motion.
+
+
+# Installation
+
+The server must be running mysql. Generate the initial database with
+
+mysql database-schema.sql
 
 
 # Warranty

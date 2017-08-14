@@ -229,6 +229,8 @@ class thermDaemon(Daemon):
     def run(self,debug=False):
         """
         Every 60 seconds, send the thermostat temperature to the DB.
+        Try to ask the server for directions. If the server cannot be reached, operate in a dumb
+        mode that simply looks
         Every 5 seconds, set the HVAC state.
         """
         lastDB = time.time()
