@@ -37,25 +37,32 @@ The server must be running mysql. Generate the initial database with
 
 mysql database-schema.sql
 
-* MySQL database
+MySQL database
+=============
 The database contains four tables.
-** ModuleInfo
+
+ModuleInfo
+-----------
 This table contains an entry for each module (thermostat or node) connected to the system. It includes a unique ID, a description of the module's location, a firmware version, and boolean values to represent the presence of temperature, humidity, light, and motion sensors.
 
-** SensorData
+SensorData
+-------------
 This table logs all of the sensor readings, including the thermostat(s).
 
 readingID, time, moduleID, location, tmeperature, humidity, light, occupied
 
-** ThermostatLog
+ThermostatLog
+-----------------
 This table logs only the thermostat readings.
 
 time, moduleID, actualTemp, coolOn, heatOn, fanOn, auxOn
 
-** ThermostatSet
+ThermostatSet
+----------------
 This table provides the current directive for the thermostat(s).
 
 timeStamp, moduleID, targetTemp, targetMode, expiryTime, entryNo
 
-* Warranty
+Warranty
+=======
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
