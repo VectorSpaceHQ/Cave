@@ -43,13 +43,6 @@ PLOTLY_ID2 = os.path.split(config.get('main','plotlyPlot2'))[-1]
 PLOTLY_ID3 = os.path.split(config.get('main','plotlyPlot3'))[-1]
 PLOTLY_ID4 = os.path.split(config.get('main','plotlyPlot4'))[-1]
 
-DEVELOPING = config.getboolean('main','developing')
-
-if DEVELOPING:
-    VIRTUALENV = config.get('main','devEnv')
-else:
-    VIRTUALENV = config.get('main','deployEnv')
-
 
 mysql = MySQL()
 mysql.init_app(app)
@@ -499,4 +492,3 @@ def sparkData(moduleID,location,temperature):
 if __name__ == '__main__':
     if os.fork() == 0:
         app.run("0.0.0.0",port=1070, debug=False)
-
