@@ -162,7 +162,7 @@ class autoSetDaemon(Daemon):
 
 
         # Determine the probability that the building will be occupied during
-        # each hour of the current day.
+        # each hour of the current day. This data is stored in the ThermostatLog table.
         # tuple ((hr, probability), ...)
         dow = datetime.datetime.today().weekday()
         hours = np.arange(0,23)

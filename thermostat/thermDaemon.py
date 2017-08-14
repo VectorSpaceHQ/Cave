@@ -285,6 +285,12 @@ class thermDaemon(Daemon):
 
                 hvacState = self.getHVACState()
 
+                # Try to get directive from server. Otherwise operate in dumb mode
+                try:
+                    setTime, moduleID, targetTemp, targetMode, expiryTime = self.getDBTargets()
+                except:
+                    pass
+
                 self.set_hvac()
 
                 print 'Pin Value State:',self.getHVACState()
