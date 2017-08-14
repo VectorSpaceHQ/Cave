@@ -14,7 +14,7 @@ abspath = os.path.abspath(__file__)
 dname = os.path.dirname(abspath)
 
 config = ConfigParser.ConfigParser()
-config.read(dname+"/config.txt")
+config.read(dname+"/thermostat.conf")
 
 CONN_PARAMS = (config.get('main','mysqlHost'), config.get('main','mysqlUser'),
                config.get('main','mysqlPass'), config.get('main','mysqlDatabase'),
