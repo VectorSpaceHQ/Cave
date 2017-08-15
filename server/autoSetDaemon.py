@@ -75,13 +75,13 @@ class autoSetDaemon(Daemon):
         """
         conn = mdb.connect(CONN_PARAMS[0],CONN_PARAMS[1],CONN_PARAMS[2],CONN_PARAMS[3],port=CONN_PARAMS[4])
         cursor = conn.cursor()
-        cursor.execute("SELECT * FROM SensorData LIMIT 50")
+        cursor.execute("SELECT * FROM SensorData ORDER BY readingID DESC LIMIT 50")
         sensor_data = cursor.fetchall()
         cursor.close()
 
         # Check for occupancy
         self.occupied = False
-        *A, occupancy_list = zip(*sensor_data[-20:])
+        *A, occupancy_list = zip(*sensor_data[:20])
         for value in occupancy_list:
             if value is not None:
                 self.occupied = True
@@ -125,11 +125,11 @@ class autoSetDaemon(Daemon):
         """
         # weatherDict = pywapi.get_weather_from_noaa(WEATHER_ID)
         owm = pyowm.OWM(OWM_APIKEY)
-        observation = owm.weather_at_place("Lynchburg,VA")
+        observation = owm.weather_at_place(LOCATION)
         w = observation.get_weather()
         self.T_out = w.get_temperature('fahrenheit')['temp']
 
-        fc = owm.three_hours_forecast("Lynchburg,VA")
+        fc = owm.three_hours_forecast(LOCATION)
         f = fc.get_forecast()
         # for val in f:
         #     print(val)
@@ -210,7 +210,7 @@ class autoSetDaemon(Daemon):
                         self.analyze_data()
                         # If the building is predicted to be occupied before it's possible for the HVAC to
                         # reach its target, start operating the HVAC.
-                        if self.pred_t_occupied < self.t_until_targ:
+                        if self.pred_time_occupied < self.time_until_targ:
                             self.occupied = True
 
                     if self.occupied:

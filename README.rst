@@ -66,7 +66,7 @@ timeStamp, mode, moduleID, targetTemp, actualTemp, coolOn, heatOn, fanOn, auxOn
 
 ThermostatSet
 ----------------
-This table provides the current directive for the thermostat(s).
+This table provides the current directive for the thermostat(s). The server writes to this table and the thermostat reads from it.
 
 timeStamp, moduleID, targetTemp, targetMode, expiryTime, entryNo
 
