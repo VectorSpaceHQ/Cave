@@ -4,7 +4,7 @@ import sys
 import subprocess
 import os
 import time
-# import RPi.GPIO as GPIO
+import RPi.GPIO as GPIO
 import datetime
 import configparser
 
@@ -327,13 +327,10 @@ class thermDaemon(Daemon):
                     # raise
                 exc_type, exc_obj, exc_tb = sys.exc_info()
                 fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
-                fobj = open(dname+'/logs/thermDaemon.log','wb')
 
-                fobj.write('Error occurred at %s \n'%(datetime.datetime.now().strftime('%m-%d-%y-%X')))
-                fobj.write(str(exc_type.__name__)+'\n')
-                fobj.write(str(fname)+'\n')
-                fobj.write(str(exc_tb.tb_lineno)+'\n\n')
-
+                logging.debug("error occurred at " + str(datetime.datetime.now()))
+                logging.debug(fname)
+                return
 
 
 
@@ -351,7 +348,9 @@ if __name__ == "__main__":
             print("restarting")
             daemon.restart()
         elif 'debug' == sys.argv[1]:
-                daemon.run(True)
+            import logging
+            logging.basicConfig(filename='thermostat.log',level=logging.DEBUG)
+            daemon.run(True)
         else:
             print("Unknown command")
             sys.exit(2)
