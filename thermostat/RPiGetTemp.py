@@ -8,13 +8,13 @@ import time
 import MySQLdb as mdb
 import os
 
-import ConfigParser
+import configparser
 
 abspath = os.path.abspath(__file__)
 dname = os.path.dirname(abspath)
 
-config = ConfigParser.ConfigParser()
-config.read(dname+"/thermostat.conf")
+config = configparser.ConfigParser()
+config.read(dname+"/token.txt")
 
 CONN_PARAMS = (config.get('main','mysqlHost'), config.get('main','mysqlUser'),
                config.get('main','mysqlPass'), config.get('main','mysqlDatabase'),

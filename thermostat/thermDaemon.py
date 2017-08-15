@@ -4,9 +4,9 @@ import sys
 import subprocess
 import os
 import time
-import RPi.GPIO as GPIO
+# import RPi.GPIO as GPIO
 import datetime
-import ConfigParser
+import configparser
 
 import MySQLdb as mdb
 
@@ -20,8 +20,8 @@ dname = os.path.dirname(abspath)
 # os.chdir(dname)
 
 #read values from the config file
-config = ConfigParser.ConfigParser()
-config.read(dname+"/config.txt")
+config = configparser.ConfigParser()
+config.read(dname+"/thermostat.conf")
 
 active_hysteresis = float(config.get('main','active_hysteresis'))
 inactive_hysteresis = float(config.get('main','inactive_hysteresis'))
@@ -37,6 +37,8 @@ AUX_ID = int(config.get('main','AUX_ID'))
 AUX_TIMER = 10 #minutes
 AUX_THRESH = 0.2 #degrees
 
+config = configparser.ConfigParser()
+config.read(dname+"/token.txt")
 CONN_PARAMS = (config.get('main','mysqlHost'), config.get('main','mysqlUser'),
         config.get('main','mysqlPass'), config.get('main','mysqlDatabase'),
         int(config.get('main','mysqlPort')))
@@ -182,6 +184,9 @@ class thermDaemon(Daemon):
 
 
     def logStatus(self, mode, moduleID, targetTemp,actualTemp,hvacState):
+        """
+        Log status to the ThermostatLog table.
+        """
         conDB = mdb.connect(CONN_PARAMS[0],CONN_PARAMS[1],CONN_PARAMS[2],CONN_PARAMS[3],port=CONN_PARAMS[4])
         cursor = conDB.cursor()
 
@@ -196,8 +201,24 @@ class thermDaemon(Daemon):
         conDB.close()
 
 
-    def set_hvac(self, auxBool=False):
+    def server_mode(self, target_mode):
         """
+        The server is providing directive on what to do.
+        """
+        if target_mode == 'heat':
+            hvacState = self.heat()
+        if target_mode == 'cool':
+            hvacState = self.cool()
+        if target_mode == 'idle':
+            hvacState = self.fan()
+            time.sleep(30)
+            hvacState = self.idle()
+
+
+    def fallback_mode(self, auxBool=False):
+        """
+        If connection to the server is lost, assume space is occupied and try to
+        maintain the comfort zone at all times.
         Set the HVAC unit to cool, heat, aux heat, or idle. Return the state of the HVAC unit.
         """
         hvacState=self.getHVACState()
@@ -288,15 +309,15 @@ class thermDaemon(Daemon):
                 # Try to get directive from server. Otherwise operate in dumb mode
                 try:
                     setTime, moduleID, targetTemp, targetMode, expiryTime = self.getDBTargets()
+                    self.server_mode()
                 except:
-                    pass
+                    self.fallback_mode()
 
-                self.set_hvac()
 
-                print 'Pin Value State:',self.getHVACState()
-                print 'Target Mode:',targetMode
-                print 'Temp from DB:', tempList
-                print 'Target Temp:', targetTemp
+                print('Pin Value State:',self.getHVACState())
+                print('Target Mode:',targetMode)
+                print('Temp from DB:', tempList)
+                print('Target Temp:', targetTemp)
 
                 time.sleep(5)
 
@@ -332,9 +353,9 @@ if __name__ == "__main__":
         elif 'debug' == sys.argv[1]:
                 daemon.run(True)
         else:
-            print "Unknown command"
+            print("Unknown command")
             sys.exit(2)
         sys.exit(0)
     else:
-        print "usage: %s start|stop|restart" % sys.argv[0]
+        print("usage: %s start|stop|restart" % sys.argv[0])
         sys.exit(2)
