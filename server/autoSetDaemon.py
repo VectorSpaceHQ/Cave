@@ -71,11 +71,11 @@ class autoSetDaemon(Daemon):
 
     def get_sensor_data(self):
         """
-        Return all sensor data from the SensorData table.
+        Return sensor data from the SensorData table.
         """
         conn = mdb.connect(CONN_PARAMS[0],CONN_PARAMS[1],CONN_PARAMS[2],CONN_PARAMS[3],port=CONN_PARAMS[4])
         cursor = conn.cursor()
-        cursor.execute("SELECT * FROM SensorData")
+        cursor.execute("SELECT * FROM SensorData LIMIT 50")
         sensor_data = cursor.fetchall()
         cursor.close()
 
