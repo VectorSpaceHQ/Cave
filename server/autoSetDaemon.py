@@ -5,7 +5,7 @@ import datetime
 import sys
 import pickle
 import numpy as np
-
+import math
 import re
 
 import pyowm
@@ -40,6 +40,7 @@ if WEB_WEATHER:
     WEATHER_ID = config.get('main','NOAACode')
 
 OUTSIDE_ID = config.get('main','WeatherModuleID')
+OWM_APIKEY = config.get('main', 'OWM_APIKey')
 
 
 class autoSetDaemon(Daemon):
@@ -66,47 +67,21 @@ class autoSetDaemon(Daemon):
         return thermSet[0][1:-1]
 
 
-    def getProgTimes(self,progStr):
-
+    def get_sensor_data(self):
+        """
+        Return all sensor data from the SensorData table.
+        """
         conn = mdb.connect(CONN_PARAMS[0],CONN_PARAMS[1],CONN_PARAMS[2],CONN_PARAMS[3],port=CONN_PARAMS[4])
         cursor = conn.cursor()
-
-        dayDict = {'MON': 0, 'TUE': 1, 'WED': 2, 'THU': 3, 'FRI': 4, 'SAT': 5, 'SUN': 6}
-
-        if progStr == 'Seven Day':
-            cursor.execute("SELECT weekDay,time FROM ManualProgram")
-            progTimes = cursor.fetchall()
-        elif progStr == 'Smart':
-            cursor.execute("SELECT weekDay,time FROM SmartProgram")
-        else:
-            cursor.close()
-            return []
-
-
-        progTimes = [list(pair) for pair in progTimes]
-        progDT = []
-        for pair in progTimes:
-            pair[1] = (datetime.datetime.min + pair[1]).time()
-            pair[0] = self.next_weekday(dayDict[pair[0]],pair[1])
-
-            progDT.append(datetime.datetime.combine(pair[0],pair[1]))
-
+        cursor.execute("SELECT * FROM SensorData")
+        sensor_data = cursor.fetchall()
         cursor.close()
-        conn.close()
 
-        return progDT
-
-    def next_weekday(self, weekday, tod):
-        d = datetime.datetime.now()
-        days_ahead = weekday - d.date().weekday()
-
-        if days_ahead < 0: # Target day already happened this week
-            days_ahead += 7
-        if days_ahead == 0:
-            if d.time() > tod:
-                days_ahead += 7
-
-        return d + datetime.timedelta(days_ahead)
+        print(sensor_data[-1])
+        last_sensor_time = sensor_data[-1][1]
+        self.occupied = sensor_data[-1][-1]
+        self.T_in = sensor_data[-1][-4]
+        return
 
 
     def backupDB(self):
@@ -137,23 +112,51 @@ class autoSetDaemon(Daemon):
         fobj.close()
 
 
-    def check_future(self):
+    def get_weather(self):
         """
         Return the next hours temperature based on NOAA predictions.
         """
-        weatherDict = pywapi.get_weather_from_noaa(WEATHER_ID)
-        print(weatherDict)
+        # weatherDict = pywapi.get_weather_from_noaa(WEATHER_ID)
+        owm = pyowm.OWM(OWM_APIKEY)
+        observation = owm.weather_at_place("Lynchburg,VA")
+        w = observation.get_weather()
+        self.T_out = w.get_temperature('fahrenheit')['temp']
+
+        fc = owm.three_hours_forecast("Lynchburg,VA")
+        f = fc.get_forecast()
+        # for val in f:
+        #     print(val)
+
+
+        # Store weather as sensor data for outside
+        # conDB = mdb.connect(CONN_PARAMS[0],CONN_PARAMS[1],CONN_PARAMS[2],CONN_PARAMS[3],port=CONN_PARAMS[4])
+        # cursor = conDB.cursor()
+        # cursor.execute("INSERT SensorData SET moduleID=0, location='outside', temperature=%s"%str(self.T_out))
+        # cursor.close()
+        # conDB.commit()
+        # conDB.close()
+
         return
 
 
     def analyze_data(self):
         """
         Look through the history of temperatures. Determine,
-        time to reach setpoint
+        time to reach setpoint, knowing the inside temperature and predicted outside temperature for the next 8 hrs.
         active hours per day
         probability of occupancy
         """
+        conn = mdb.connect(CONN_PARAMS[0],CONN_PARAMS[1],CONN_PARAMS[2],CONN_PARAMS[3],port=CONN_PARAMS[4])
+        cursor = conn.cursor()
+        cursor.execute("SELECT * FROM SensorData")
+        sensor_data = cursor.fetchall()
+        cursor.close()
 
+
+        for data in sensor_data[-1000:]:
+            time = data[1]
+            T_in = data[4]
+            # print(data)
         # Given a dataset of thermostat temperature and an outdoor temperature,
         # Determine how long it typically take to reach target setpoint
         # Calculate heat_rate
@@ -171,51 +174,52 @@ class autoSetDaemon(Daemon):
         return
 
 
-    def run(self,debug=False):
+    def run(self, debug=False, plot=False, backup=False):
         """
+        Every 60 seconds, get the sensor data, determine if building is occupied,
+        look at weather prediction, make decision, direct thermostat on what to do.
         """
         print("running")
-        plot = False
-        backup = False
         while True:
             try:
                 curModule, targTemp, targMode, expTime = self.getThermSet()
-                weekList = ['MON','TUE','WED','THU','FRI','SAT','SUN']
                 curTime = datetime.datetime.now()
 
-                logging.debug("time list: " + str(timeList))
                 logging.debug("current time: " +str(curTime))
                 logging.debug("expTime: " + str(expTime))
 
                 if curTime>expTime:
+                    self.get_sensor_data()
+                    self.get_weather()
 
-                    conn = mdb.connect(CONN_PARAMS[0],CONN_PARAMS[1],CONN_PARAMS[2],CONN_PARAMS[3],port=CONN_PARAMS[4])
-                    cursor = conn.cursor()
+                    # Use prediction to determine if space should be treated as occupied
+                    if not self.occupied:
+                        # Determine if building will soon be occupied
+                        # Determine if predicted occupancy is sooner than the system can reach the target
+                        self.analyze_data()
+                        # If the building is predicted to be occupied before it's possible for the HVAC to
+                        # reach its target, start operating the HVAC.
+                        if self.pred_t_occupied < self.t_until_targ:
+                            self.occupied = True
 
-                    diffList = [datetime.datetime.now()-timeObj for timeObj in timeList]
-                    sortedInds = sorted(range(len(diffList)), key=lambda k: diffList[k])
-
-                    keepInd = [ind for ind in sortedInds if diffList[ind].total_seconds()<0]
-                    rowKey = keepInd[0]
-
-                    newExp = timeList[sortedInds[-1]]
-
-                    cursor.execute("SELECT * FROM SmartProgram WHERE rowKey=%s" % (str(rowKey+1)))
-
-                    newData = cursor.fetchall()[0]
-
-                    if occupied:
-                        analyze_data()
-                    else:
-                        check_future()
+                    if self.occupied:
+                        if (self.T_in < comfort_zone[0]):
+                            if self.T_out > comfort_zone[0]:
+                                print("Outside temperature is in your comfort zone. Open the windows!")
+                            else:
+                               print("heat")
+                        elif (self.T_in > comfort_zone[1]):
+                            if self.Tout < comfort_zone[1]:
+                                print("Outside temperature is in your comfort zone. Open the windows!")
+                            else:
+                               print("cool")
+                        else:
+                            print("Temperature is in your comfort zone.")
+                            print("idle")
 
 
                     cursor.execute("UPDATE ThermostatSet SET moduleID=%s, targetTemp=%s, targetMode='%s', expiryTime='%s' WHERE entryNo=1"
                            %(str(newData[3]),str(newData[4]),str(newData[5]),str(newExp)))
-
-                    logging.debug("where: "+str(rowKey+1))
-                    logging.debug(newData)
-
                     conn.commit()
                     cursor.close()
                     conn.close()
@@ -224,23 +228,6 @@ class autoSetDaemon(Daemon):
                 #########################################
                 ##### Check about plotting
                 #########################################
-                try:
-                    fobj = open('plotData.pck','rb')
-                    lastPlot = pickle.load(fobj)[-1]
-                    fobj.close()
-
-                    if (curTime-lastPlot).total_seconds()>600:
-                        plot = True
-                except:
-                    plot = False
-
-
-                if plot:
-                    plotData = self.createPlots(curTime)
-
-                    fobj = open("plotData.pck", "wb")
-                    pickle.dump(plotData,fobj)
-                    fobj.close()
 
 
                 #########################################
