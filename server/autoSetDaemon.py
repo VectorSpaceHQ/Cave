@@ -46,7 +46,7 @@ LOCATION = config.get('main', 'Location')
 
 
 class autoSetDaemon(Daemon):
-    def getThermSet(self):
+    def get_therm_set(self):
         """
         Return the thermostat setpoint stored in the SQL database.
         """
@@ -172,11 +172,23 @@ class autoSetDaemon(Daemon):
 
 
         # Determine the probability that the building will be occupied during
-        # each hour of the current day. This data is stored in the ThermostatLog table.
-        # tuple ((hr, probability), ...)
-        dow = datetime.datetime.today().weekday()
+        # each hour of the current day.
+        # Look at last 10 occurances of the current day.
+        # If at any point during an hour, the space is occupied, then space is occupied for that hour
+        # Probability is n_occupied / 10
+        # Return tuple ((hr, probability), ...)
+        today = datetime.datetime.today().weekday()
         hours = np.arange(0,23)
         P_occupied = (0,0)
+        self.pred_time_occupied = 1
+        id, time_list, z, location, temp, b, c, occupancy_list = zip(*sensor_data)
+        for time, occupied in zip(time_list, occupancy_list):
+            dow = time.weekday()
+            if today == dow: # Look only at today
+                hour = time.strftime('%H')
+                for hr in hours:
+                    if hr == int(hour):
+                        # print(hr)
 
         return
 
@@ -189,7 +201,7 @@ class autoSetDaemon(Daemon):
         print("running")
         while True:
             try:
-                curModule, target_temp, mode, expTime = self.getThermSet()
+                curModule, target_temp, mode, expTime = self.get_therm_set()
                 old_mode = mode
                 curTime = datetime.datetime.now()
 
@@ -202,6 +214,7 @@ class autoSetDaemon(Daemon):
 
                     self.get_sensor_data()
                     self.get_weather()
+                    self.analyze_data()
 
                     # Use prediction to determine if space should be treated as occupied
                     if not self.occupied:
