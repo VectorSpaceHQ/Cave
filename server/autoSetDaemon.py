@@ -80,6 +80,7 @@ class autoSetDaemon(Daemon):
         cursor.close()
 
         # Check for occupancy
+        self.occupied = False
         *A, occupancy_list = zip(*sensor_data[-20:])
         for value in occupancy_list:
             if value is not None:
