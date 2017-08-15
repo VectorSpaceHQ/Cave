@@ -201,18 +201,22 @@ class thermDaemon(Daemon):
         conDB.close()
 
 
-    def server_mode(self, target_mode):
+    def server_mode(self):
         """
         The server is providing directive on what to do.
         """
+        setTime, moduleID, targetTemp, target_mode, expiryTime = self.getDBTargets()
         if target_mode == 'heat':
             hvacState = self.heat()
-        if target_mode == 'cool':
+        elif target_mode == 'cool':
             hvacState = self.cool()
-        if target_mode == 'idle':
+        elif target_mode == 'idle':
             hvacState = self.fan()
             time.sleep(30)
             hvacState = self.idle()
+        else:
+            hvacState = self.idle()
+        return hvacState
 
 
     def fallback_mode(self, auxBool=False):
@@ -222,9 +226,9 @@ class thermDaemon(Daemon):
         Set the HVAC unit to cool, heat, aux heat, or idle. Return the state of the HVAC unit.
         """
         hvacState=self.getHVACState()
-        tempList = self.getTempList()
 
-        setTime, moduleID, minTemp, maxTemp, expiryTime = self.getDBTargets()
+        T_min = comfort_zone[0]
+        T_max = comfort_zone[1]
 
         if hvacState == (0,0,0,0): #idle
             if tempList[moduleID-1] < (minTemp - inactive_hysteresis):
@@ -304,11 +308,8 @@ class thermDaemon(Daemon):
                     self.logStatus(moduleID,targetTemp,tempList[moduleID-1],self.getHVACState())
                     lastDB = time.time()
 
-                hvacState = self.getHVACState()
-
                 # Try to get directive from server. Otherwise operate in dumb mode
                 try:
-                    setTime, moduleID, targetTemp, targetMode, expiryTime = self.getDBTargets()
                     self.server_mode()
                 except:
                     self.fallback_mode()
@@ -323,15 +324,13 @@ class thermDaemon(Daemon):
 
             except Exception as e:
                 if debug==True:
-                    print(e)
-                    # raise
+                    logging.debug(e)
                 exc_type, exc_obj, exc_tb = sys.exc_info()
                 fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
 
                 logging.debug("error occurred at " + str(datetime.datetime.now()))
                 logging.debug(fname)
                 return
-
 
 
 if __name__ == "__main__":
