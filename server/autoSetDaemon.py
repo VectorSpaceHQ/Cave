@@ -24,23 +24,25 @@ abspath = os.path.abspath(__file__)
 dname = os.path.dirname(abspath)
 os.chdir(dname)
 
+token = configparser.ConfigParser()
+token.read(dname+"/token.txt")
+
+CONN_PARAMS = (token.get('main','mysqlHost'), token.get('main','mysqlUser'),
+               token.get('main','mysqlPass'), token.get('main','mysqlDatabase'),
+               int(token.get('main','mysqlPort')))
 
 config = configparser.ConfigParser()
 config.read(dname+"/server.conf")
 
-CONN_PARAMS = (config.get('main','mysqlHost'), config.get('main','mysqlUser'),
-               config.get('main','mysqlPass'), config.get('main','mysqlDatabase'),
-               int(config.get('main','mysqlPort')))
+T_MIN = float(config.get('main', 'Minimum_Temperature'))
+T_MAX = float(config.get('main', 'Maximum_Temperature'))
+comfort_zone = [T_MIN, T_MAX]
 
 MYSQL_BACKUP_DIR = config.get('main','mysqlBackupDir')
 
-
-WEB_WEATHER = config.getboolean('main','NOAAWeather')
-if WEB_WEATHER:
-    WEATHER_ID = config.get('main','NOAACode')
-
 OUTSIDE_ID = config.get('main','WeatherModuleID')
 OWM_APIKEY = config.get('main', 'OWM_APIKey')
+LOCATION = config.get('main', 'Location')
 
 
 class autoSetDaemon(Daemon):
@@ -77,10 +79,14 @@ class autoSetDaemon(Daemon):
         sensor_data = cursor.fetchall()
         cursor.close()
 
-        print(sensor_data[-1])
+        # Check for occupancy
+        *A, occupancy_list = zip(*sensor_data[-20:])
+        for value in occupancy_list:
+            if value is not None:
+                self.occupied = True
+
         last_sensor_time = sensor_data[-1][1]
-        self.occupied = sensor_data[-1][-1]
-        self.T_in = sensor_data[-1][-4]
+        self.T_in = float(sensor_data[-1][-4])
         return
 
 
@@ -182,13 +188,17 @@ class autoSetDaemon(Daemon):
         print("running")
         while True:
             try:
-                curModule, targTemp, targMode, expTime = self.getThermSet()
+                curModule, target_temp, mode, expTime = self.getThermSet()
+                old_mode = mode
                 curTime = datetime.datetime.now()
 
                 logging.debug("current time: " +str(curTime))
                 logging.debug("expTime: " + str(expTime))
 
                 if curTime>expTime:
+                    conn = mdb.connect(CONN_PARAMS[0],CONN_PARAMS[1],CONN_PARAMS[2],CONN_PARAMS[3],port=CONN_PARAMS[4])
+                    cursor = conn.cursor()
+
                     self.get_sensor_data()
                     self.get_weather()
 
@@ -207,19 +217,27 @@ class autoSetDaemon(Daemon):
                             if self.T_out > comfort_zone[0]:
                                 print("Outside temperature is in your comfort zone. Open the windows!")
                             else:
-                               print("heat")
+                                mode = 'heat'
+                                target_temp = comfort_zone[0]
                         elif (self.T_in > comfort_zone[1]):
                             if self.Tout < comfort_zone[1]:
                                 print("Outside temperature is in your comfort zone. Open the windows!")
                             else:
-                               print("cool")
+                               mode = 'cool'
+                               target_temp = comfort_zone[1]
                         else:
                             print("Temperature is in your comfort zone.")
-                            print("idle")
+                            mode = 'idle'
 
+                    if old_mode != mode:
+                        # All action changes should have a minimum time of 5 minutes to prevent oscillations on the compressor.
+                        newExp = datetime.datetime.now() + datetime.timedelta(minutes=5)
+                    else:
+                        newExp = datetime.datetime.now()
 
+                    logging.debug(','.join([str(curModule), str(target_temp), str(mode), str(newExp)]))
                     cursor.execute("UPDATE ThermostatSet SET moduleID=%s, targetTemp=%s, targetMode='%s', expiryTime='%s' WHERE entryNo=1"
-                           %(str(newData[3]),str(newData[4]),str(newData[5]),str(newExp)))
+                           %(str(curModule),str(target_temp),mode,str(newExp)))
                     conn.commit()
                     cursor.close()
                     conn.close()
