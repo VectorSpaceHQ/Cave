@@ -161,6 +161,9 @@ class thermDaemon(Daemon):
 
 
     def getTempList(self):
+        """
+        Return all temperatures from SensorData table.
+        """
         conDB = mdb.connect(CONN_PARAMS[0],CONN_PARAMS[1],CONN_PARAMS[2],CONN_PARAMS[3],port=CONN_PARAMS[4])
         cursor = conDB.cursor()
 
