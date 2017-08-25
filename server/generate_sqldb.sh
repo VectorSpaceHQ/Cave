@@ -17,4 +17,4 @@ then
 fi
 
 $MYSQL -uroot -p -e "$SQL"
-mysql -u root -p hvac < database-schema.sql
+mysql -u $1 -p hvac < database-schema.sql

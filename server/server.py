@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 import os
 import time
 import datetime
@@ -14,7 +14,6 @@ import configparser
 from PythonDaemon import Daemon
 
 import MySQLdb as mdb
-# import mysqlclient as mdb
 
 import logging
 
@@ -188,7 +187,7 @@ class autoSetDaemon(Daemon):
                 hour = time.strftime('%H')
                 for hr in hours:
                     if hr == int(hour):
-                        # print(hr)
+                        print(hr)
 
         return
 

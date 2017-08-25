@@ -1,0 +1,6 @@
+[main]
+mysqlHost=localhost
+mysqlUser=root
+mysqlpass=password
+mysqldatabase=hvac
+mysqlport=3306
