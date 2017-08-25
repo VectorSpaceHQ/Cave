@@ -60,7 +60,7 @@ Modify the token files with appropriate values.
 ./thermostat/token.txt
 ./server/token.txt
 
-Modify the config files with appropriate values based on your wiring.
+Modify the config files with appropriate values based on your wiring and preferences.
 ./thermostat/thermostat.conf
 ./server/server.conf
 
