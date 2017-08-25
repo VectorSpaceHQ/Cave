@@ -30,6 +30,8 @@ ORANGE_PIN = int(config.get('main','ORANGE_PIN'))
 YELLOW_PIN = int(config.get('main','YELLOW_PIN'))
 GREEN_PIN = int(config.get('main','GREEN_PIN'))
 AUX_PIN = int(config.get('main','AUX_PIN'))
+PIR_PIN = int(config.get('main','PIR_PIN'))
+TEMP_PIN = int(config.get('main','TEMP_PIN'))
 
 AUX_ID = int(config.get('main','AUX_ID'))
 
@@ -51,6 +53,9 @@ class thermDaemon(Daemon):
         GPIO.setup(YELLOW_PIN, GPIO.OUT)
         GPIO.setup(GREEN_PIN, GPIO.OUT)
         GPIO.setup(AUX_PIN, GPIO.OUT)
+
+        GPIO.setup(PIR_PIN, GPIO.IN)
+        GPIO.setup(TEMP_PIN, GPIO.IN)
 
         subprocess.Popen("echo " + str(ORANGE_PIN) + " > /sys/class/gpio/export", shell=True)
         subprocess.Popen("echo " + str(YELLOW_PIN) + " > /sys/class/gpio/export", shell=True)
