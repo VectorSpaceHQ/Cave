@@ -151,6 +151,7 @@ class thermDaemon(Daemon):
         return (0, 0, 0, 0)
 
 
+    
     def getDBTargets(self):
         conDB = mdb.connect(CONN_PARAMS[0],CONN_PARAMS[1],CONN_PARAMS[2],CONN_PARAMS[3],port=CONN_PARAMS[4])
         cursor = conDB.cursor()
@@ -286,7 +287,10 @@ class thermDaemon(Daemon):
                 else:
                     auxElapsed = 0
 
+                print("here")
                 setTime, moduleID, targetTemp, targetMode, expiryTime = self.getDBTargets()
+                print("done")
+                log.debug(setTime, moduleID, targetTemp, targetMode, expiryTime)
 
                 moduleID = int(moduleID)
                 targetTemp = int(targetTemp)

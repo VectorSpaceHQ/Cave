@@ -45,6 +45,28 @@ LOCATION = config.get('main', 'Location')
 
 
 class autoSetDaemon(Daemon):
+    
+    def init_therm_set(self):
+        """
+        Initialize the thermostatSet table in the MySQL database.
+        """
+        # 2017-08-15 08:56:43
+        timestamp = datetime.datetime.now().strftime('%Y-%m-%d %X')
+        moduleID = 1
+        target_temp = 70
+        mode = "fan"
+        expiry_time = (datetime.datetime.now()+ datetime.timedelta(minutes=1)).strftime('%Y-%m-%d %X') 
+        print(timestamp, expiry_time)
+        entryNo = 1
+        conn = mdb.connect(CONN_PARAMS[0],CONN_PARAMS[1],CONN_PARAMS[2],
+                           CONN_PARAMS[3],port=CONN_PARAMS[4])
+        cursor = conn.cursor()
+        cursor.execute("""INSERT ThermostatSet SET moduleID=%s, targetTemp=%s, targetMode=%s, expiryTime=%s"""%(str(moduleID),str(target_temp),mode,str(expiry_time)))
+        conn.commit()
+        cursor.close()
+        conn.close()
+        print("done")
+        
     def get_therm_set(self):
         """
         Return the thermostat setpoint stored in the SQL database.
@@ -78,6 +100,13 @@ class autoSetDaemon(Daemon):
         sensor_data = cursor.fetchall()
         cursor.close()
 
+        # if no sensor data, wait until populated
+        if len(sensor_data) == 0:
+            while True:
+                print("waiting for first data")
+                self.init_therm_set()
+                time.sleep(30)
+            
         # Check for occupancy
         self.occupied = False
         *A, occupancy_list = zip(*sensor_data[:20])
@@ -88,7 +117,7 @@ class autoSetDaemon(Daemon):
         last_sensor_time = sensor_data[-1][1]
         self.T_in = float(sensor_data[-1][-4])
         return
-
+    
 
     def backupDB(self):
         conn = mdb.connect(CONN_PARAMS[0],CONN_PARAMS[1],CONN_PARAMS[2],CONN_PARAMS[3],port=CONN_PARAMS[4])
@@ -212,8 +241,8 @@ class autoSetDaemon(Daemon):
                     cursor = conn.cursor()
 
                     self.get_sensor_data()
-                    self.get_weather()
-                    self.analyze_data()
+                    # self.get_weather()
+                    # self.analyze_data()
 
                     # Use prediction to determine if space should be treated as occupied
                     if not self.occupied:
