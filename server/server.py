@@ -118,7 +118,7 @@ class autoSetDaemon(Daemon):
                 self.occupied = True
 
         last_sensor_time = sensor_data[-1][1]
-        self.T_in = float(sensor_data[-1][-4])
+        self.T_in = float(sensor_data[0][-4])
         return
 
 
@@ -240,12 +240,13 @@ class autoSetDaemon(Daemon):
                 logging.debug("current time: " +str(curTime))
                 logging.debug("expTime: " + str(expTime))
 
+                print(curTime, expTime)
                 if curTime>expTime:
                     conn = mdb.connect(CONN_PARAMS[0],CONN_PARAMS[1],CONN_PARAMS[2],CONN_PARAMS[3],port=CONN_PARAMS[4])
                     cursor = conn.cursor()
 
                     self.get_sensor_data()
-                    # self.get_weather()
+                    self.get_weather()
                     # self.analyze_data()
                     self.occupied = True # Testing
 
@@ -267,7 +268,7 @@ class autoSetDaemon(Daemon):
                                 mode = 'heat'
                                 target_temp = comfort_zone[0]
                         elif (self.T_in > comfort_zone[1]):
-                            if self.Tout < comfort_zone[1]:
+                            if self.T_out < comfort_zone[1]:
                                 print("Outside temperature is in your comfort zone. Open the windows!")
                             else:
                                mode = 'cool'
