@@ -38,6 +38,8 @@ Nodes
 ------
 Nodes are optional pieces of hardware that provide additional sensor data to the MySQL database such as temperatures, humidity, and motion.
 
+Nodes publish data using the MQTT protocol. This is done rather than modifying the MySQL database directly, simply because these nodes are small and rarely support SQL, as in the case of the ESP8266. The RPi subscribes to the MQTT channel and inserts the data it receives into the SQL database.
+
 
 Installation
 ===========
