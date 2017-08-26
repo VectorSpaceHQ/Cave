@@ -219,7 +219,7 @@ class autoSetDaemon(Daemon):
                 hour = time.strftime('%H')
                 for hr in hours:
                     if hr == int(hour):
-                        print(hr)
+                        pass
 
         return
 
@@ -247,6 +247,7 @@ class autoSetDaemon(Daemon):
                     self.get_sensor_data()
                     # self.get_weather()
                     # self.analyze_data()
+                    self.occupied = True # Testing
 
                     # Use prediction to determine if space should be treated as occupied
                     if not self.occupied:
@@ -255,8 +256,8 @@ class autoSetDaemon(Daemon):
                         self.analyze_data()
                         # If the building is predicted to be occupied before it's possible for the HVAC to
                         # reach its target, start operating the HVAC.
-                        if self.pred_time_occupied < self.time_until_targ:
-                            self.occupied = True
+                        # if self.pred_time_occupied < self.time_until_targ:
+                        #     self.occupied = True
 
                     if self.occupied:
                         if (self.T_in < comfort_zone[0]):
@@ -273,6 +274,7 @@ class autoSetDaemon(Daemon):
                                target_temp = comfort_zone[1]
                         else:
                             print("Temperature is in your comfort zone.")
+                            print(self.T_in)
                             mode = 'idle'
 
                     if old_mode != mode:

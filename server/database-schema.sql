@@ -67,7 +67,6 @@ DROP TABLE IF EXISTS `ThermostatLog`;
 /*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `ThermostatLog` (
   `timeStamp` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  `mode` varchar(45) NOT NULL DEFAULT '',
   `moduleID` int(11) unsigned NOT NULL,
   `targetTemp` int(11) DEFAULT NULL,
   `actualTemp` float DEFAULT NULL,
@@ -77,9 +76,7 @@ CREATE TABLE `ThermostatLog` (
   `auxOn` tinyint(1) NOT NULL,
   PRIMARY KEY (`timeStamp`),
   KEY `moduleID` (`moduleID`),
-  KEY `mode` (`mode`),
-  CONSTRAINT `ThermostatLog_ibfk_1` FOREIGN KEY (`moduleID`) REFERENCES `ModuleInfo` (`moduleID`) ON DELETE CASCADE,
-  CONSTRAINT `ThermostatLog_ibfk_2` FOREIGN KEY (`mode`) REFERENCES `OperationModes` (`mode`) ON DELETE CASCADE
+  CONSTRAINT `ThermostatLog_ibfk_1` FOREIGN KEY (`moduleID`) REFERENCES `ModuleInfo` (`moduleID`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 

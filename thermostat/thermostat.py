@@ -87,6 +87,7 @@ class thermDaemon(Daemon):
         aux:
 
         Return a 4 value tuple.
+        (coolOn, heatOn, fanOn, auxOn)
         (0, 0, 0, 0) : idle
         elif hvacState == (1,0,1,0) or hvacState == (1,0,1,1) heating
         elif hvacState == (1,1,0,0): # it's cold out, why is the AC running?
@@ -156,7 +157,7 @@ class thermDaemon(Daemon):
         GPIO.output(AUX_PIN, False)
         #delay to preserve compressor
         print('Idling...')
-        time.sleep(30)
+        time.sleep(3)
         # time.sleep(360)
         return (0, 0, 0, 0)
 
@@ -175,12 +176,15 @@ class thermDaemon(Daemon):
         cursor = conDB.cursor()
 
         cursor.execute("SELECT * from ThermostatSet")
+        targs = cursor.fetchall()
 
-        targs = cursor.fetchall()[0]
+        if len(targs) == 0:
+            print("ERROR: database is empty. Execute server.py to initialize")
+            sys.exit()
 
         cursor.close()
         conDB.close()
-        return targs[:-1]
+        return targs[0][:-1]
 
 
     def getTempList(self):
@@ -209,7 +213,7 @@ class thermDaemon(Daemon):
         return allModTemps
 
 
-    def logStatus(self, mode, moduleID, targetTemp,actualTemp,hvacState):
+    def logStatus(self, moduleID, targetTemp,actualTemp,hvacState):
         """
         Log status to the ThermostatLog table.
         """
@@ -217,9 +221,9 @@ class thermDaemon(Daemon):
         cursor = conDB.cursor()
 
 
-        cursor.execute("""INSERT ThermostatLog SET mode=%s, moduleID=%s, targetTemp=%s, actualTemp=%s,
+        cursor.execute("""INSERT ThermostatLog SET moduleID=%s, targetTemp=%s, actualTemp=%s,
                         coolOn=%s, heatOn=%s, fanOn=%s, auxOn=%s"""%
-                        (str(mode),str(moduleID),str(targetTemp),str(actualTemp),
+                        (str(moduleID),str(targetTemp),str(actualTemp),
                         str(hvacState[1]),str(hvacState[2]),str(hvacState[0]),str(hvacState[3])))
 
         cursor.close()
@@ -238,7 +242,8 @@ class thermDaemon(Daemon):
             hvacState = self.cool()
         elif target_mode == 'idle':
             hvacState = self.fan()
-            time.sleep(30)
+            time.sleep(3)
+            # time.sleep(30)
             hvacState = self.idle()
         else:
             hvacState = self.idle()
@@ -309,7 +314,6 @@ class thermDaemon(Daemon):
                     auxElapsed = 0
 
                 setTime, moduleID, targetTemp, targetMode, expiryTime = self.getDBTargets()
-                logging.debug(str(setTime), str(moduleID), str(targetTemp), str(targetMode), str(expiryTime))
 
                 moduleID = int(moduleID)
                 targetTemp = int(targetTemp)
@@ -334,9 +338,12 @@ class thermDaemon(Daemon):
                         auxBool = False
 
                 if dbElapsed > 60:
+                    print("getting temp")
                     getTemp(sendToDB=True)
+                    # def logStatus(self, mode, moduleID, targetTemp,actualTemp,hvacState):
                     self.logStatus(moduleID,targetTemp,tempList[moduleID-1],self.getHVACState())
                     lastDB = time.time()
+                    print("done getting temp")
 
                 # Try to get directive from server. Otherwise operate in dumb mode
                 try:
@@ -356,7 +363,7 @@ class thermDaemon(Daemon):
 
             except Exception as e:
                 if debug==True:
-                    logging.debug(e)
+                    print(e)
                 exc_type, exc_obj, exc_tb = sys.exc_info()
                 fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
 
