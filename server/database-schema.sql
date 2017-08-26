@@ -15,27 +15,6 @@
 /*!40101 SET @OLD_SQL_MODE=@@SQL_MODE, SQL_MODE='NO_AUTO_VALUE_ON_ZERO' */;
 /*!40111 SET @OLD_SQL_NOTES=@@SQL_NOTES, SQL_NOTES=0 */;
 
---
--- Table structure for table `ManualProgram`
---
-
-DROP TABLE IF EXISTS `ManualProgram`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
-CREATE TABLE `ManualProgram` (
-  `rowKey` int(11) unsigned NOT NULL AUTO_INCREMENT,
-  `weekDay` char(3) NOT NULL DEFAULT '',
-  `time` time NOT NULL,
-  `moduleID` int(11) unsigned NOT NULL,
-  `desiredTemp` int(4) NOT NULL,
-  `desiredMode` varchar(45) NOT NULL DEFAULT '',
-  PRIMARY KEY (`rowKey`),
-  KEY `moduleID` (`moduleID`),
-  KEY `desiredMode` (`desiredMode`),
-  CONSTRAINT `ManualProgram_ibfk_1` FOREIGN KEY (`moduleID`) REFERENCES `ModuleInfo` (`moduleID`) ON DELETE CASCADE,
-  CONSTRAINT `ManualProgram_ibfk_2` FOREIGN KEY (`desiredMode`) REFERENCES `OperationModes` (`mode`) ON DELETE NO ACTION
-) ENGINE=InnoDB AUTO_INCREMENT=20 DEFAULT CHARSET=latin1;
-/*!40101 SET character_set_client = @saved_cs_client */;
 
 --
 -- Table structure for table `ModuleInfo`
@@ -54,33 +33,6 @@ CREATE TABLE `ModuleInfo` (
   `motionSense` tinyint(1) NOT NULL DEFAULT '0',
   PRIMARY KEY (`moduleID`)
 ) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=latin1;
-/*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Table structure for table `OperationModes`
---
-
-DROP TABLE IF EXISTS `OperationModes`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
-CREATE TABLE `OperationModes` (
-  `mode` varchar(45) NOT NULL DEFAULT '',
-  PRIMARY KEY (`mode`)
-) ENGINE=InnoDB DEFAULT CHARSET=latin1;
-/*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Table structure for table `ProgramTypes`
---
-
-DROP TABLE IF EXISTS `ProgramTypes`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
-CREATE TABLE `ProgramTypes` (
-  `program` varchar(45) NOT NULL DEFAULT '',
-  `active` tinyint(1) NOT NULL,
-  PRIMARY KEY (`program`)
-) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -105,24 +57,6 @@ CREATE TABLE `SensorData` (
 ) ENGINE=InnoDB AUTO_INCREMENT=174025 DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
---
--- Table structure for table `SmartProgram`
---
-
-DROP TABLE IF EXISTS `SmartProgram`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
-CREATE TABLE `SmartProgram` (
-  `weekDay` char(3) NOT NULL DEFAULT '',
-  `time` time NOT NULL,
-  `moduleID` int(11) unsigned NOT NULL,
-  `desiredTemp` int(4) NOT NULL,
-  `desiredMode` varchar(45) NOT NULL DEFAULT '',
-  PRIMARY KEY (`weekDay`,`time`),
-  KEY `moduleID` (`moduleID`),
-  CONSTRAINT `SmartProgram_ibfk_1` FOREIGN KEY (`moduleID`) REFERENCES `ModuleInfo` (`moduleID`) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=latin1;
-/*!40101 SET character_set_client = @saved_cs_client */;
 
 --
 -- Table structure for table `ThermostatLog`
