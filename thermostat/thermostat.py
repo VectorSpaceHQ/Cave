@@ -241,9 +241,6 @@ class thermDaemon(Daemon):
         elif target_mode == 'cool':
             hvacState = self.cool()
         elif target_mode == 'idle':
-            hvacState = self.fan()
-            time.sleep(3)
-            # time.sleep(30)
             hvacState = self.idle()
         else:
             hvacState = self.idle()
