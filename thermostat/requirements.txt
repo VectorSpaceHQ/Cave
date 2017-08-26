@@ -1,0 +1,3 @@
+# sudo pip3 install -r ./thermostat/requirements.txt 
+configparser
+mysqlclient

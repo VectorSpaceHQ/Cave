@@ -1,0 +1,4 @@
+numpy
+pyowm
+configparser
+mysqlclient

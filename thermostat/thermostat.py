@@ -1,5 +1,4 @@
-#!/usr/bin/python
-
+#!/usr/bin/env python3
 import sys
 import subprocess
 import os
@@ -31,6 +30,8 @@ ORANGE_PIN = int(config.get('main','ORANGE_PIN'))
 YELLOW_PIN = int(config.get('main','YELLOW_PIN'))
 GREEN_PIN = int(config.get('main','GREEN_PIN'))
 AUX_PIN = int(config.get('main','AUX_PIN'))
+PIR_PIN = int(config.get('main','PIR_PIN'))
+TEMP_PIN = int(config.get('main','TEMP_PIN'))
 
 AUX_ID = int(config.get('main','AUX_ID'))
 
@@ -52,6 +53,9 @@ class thermDaemon(Daemon):
         GPIO.setup(YELLOW_PIN, GPIO.OUT)
         GPIO.setup(GREEN_PIN, GPIO.OUT)
         GPIO.setup(AUX_PIN, GPIO.OUT)
+
+        GPIO.setup(PIR_PIN, GPIO.IN)
+        GPIO.setup(TEMP_PIN, GPIO.IN)
 
         subprocess.Popen("echo " + str(ORANGE_PIN) + " > /sys/class/gpio/export", shell=True)
         subprocess.Popen("echo " + str(YELLOW_PIN) + " > /sys/class/gpio/export", shell=True)
@@ -147,6 +151,7 @@ class thermDaemon(Daemon):
         return (0, 0, 0, 0)
 
 
+    
     def getDBTargets(self):
         conDB = mdb.connect(CONN_PARAMS[0],CONN_PARAMS[1],CONN_PARAMS[2],CONN_PARAMS[3],port=CONN_PARAMS[4])
         cursor = conDB.cursor()
@@ -282,7 +287,10 @@ class thermDaemon(Daemon):
                 else:
                     auxElapsed = 0
 
+                print("here")
                 setTime, moduleID, targetTemp, targetMode, expiryTime = self.getDBTargets()
+                print("done")
+                log.debug(setTime, moduleID, targetTemp, targetMode, expiryTime)
 
                 moduleID = int(moduleID)
                 targetTemp = int(targetTemp)

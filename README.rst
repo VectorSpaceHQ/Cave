@@ -4,6 +4,13 @@ Overview
 =======
 This program's goal is to maximize the amount of time spent in the comfort zone while minimizing the energy spent when the building is occupied.
 
+TODO
+====
+- Take pictures
+- Draw wiring schematics for RPi and example nodes
+- Incorporate weather predictions
+- Add probability of occupancy calculations
+
 HVAC 101
 =======
 https://github.com/Willseph/RaspberryPiThermostat
@@ -35,14 +42,38 @@ Nodes publish data using the MQTT protocol. This is done rather than modifying t
 
 Installation
 ===========
+clone the repository
+git clone https://github.com/VectorSpaceHQ/RPiThermostat
 
-The server must be running mysql. Generate the initial database with the ./server/generate_sqldb.sh script.
+Install mysql server on the server.
+sudo apt-get install mysql-server
 
+Install supporting packages.
+sudo apt-get install python3-dev libmysqlclient-dev
+
+Generate the initial MySQL database.
+./server/generate_sqldb.sh mysqlusername password
+
+Install python packages on the server and thermostat.
+sudo pip3 install -r ./server/requirements.txt
+sudo pip3 install -r ./thermostat/requirements.txt
+
+Modify the token files with appropriate values.
+./thermostat/token.txt
+./server/token.txt
+
+Modify the config files with appropriate values based on your wiring and preferences.
+./thermostat/thermostat.conf
+./server/server.conf
+
+
+Usage
+=====
 On the server,
-./server/autoSetDaemon.py
+./server/server.py start
 
 On the RPi thermostat run,
-./thermostat/thermDaemon.py
+./thermostat/thermostat.py start
 
 
 MySQL database
