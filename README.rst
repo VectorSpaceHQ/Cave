@@ -10,6 +10,7 @@ TODO
 - Draw wiring schematics for RPi and example nodes
 - Incorporate weather predictions
 - Add probability of occupancy calculations
+- Switch from RPI.GPIO to gpiozero library
 
 HVAC 101
 =======
@@ -63,6 +64,11 @@ Modify the token files with appropriate values.
 Modify the config files with appropriate values based on your wiring and preferences.
 ./thermostat/thermostat.conf
 ./server/server.conf
+
+Enable SPI and 1-Wire on the RPi.
+sudo raspi-config
+Advanced Options
+enable SPI and 1-Wire
 
 
 Usage

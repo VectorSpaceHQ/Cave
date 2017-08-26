@@ -46,6 +46,23 @@ CONN_PARAMS = (config.get('main','mysqlHost'), config.get('main','mysqlUser'),
 
 
 class thermDaemon(Daemon):
+    def init_module_info(self):
+        """
+        If the ModuleInfo table is empty, this function will populate it with default values.
+        This table is required before any other tables can be populated.
+        """
+        conn = mdb.connect(CONN_PARAMS[0],CONN_PARAMS[1],CONN_PARAMS[2],
+                           CONN_PARAMS[3],port=CONN_PARAMS[4])
+        cursor = conn.cursor()
+
+        cursor.execute("SELECT * from ModuleInfo")
+        targs = cursor.fetchall()
+        if len(targs) == 0:
+            cursor.execute("""INSERT ModuleInfo SET strDescription='thermostat', FirmwareVer='1', tempSense=1, humiditySense=0, lightSense=0, motionSense=0""")
+
+        cursor.close()
+        conn.commit()
+        conn.close()
 
     def configureGPIO(self):
         GPIO.setmode(GPIO.BCM)
@@ -139,7 +156,8 @@ class thermDaemon(Daemon):
         GPIO.output(AUX_PIN, False)
         #delay to preserve compressor
         print('Idling...')
-        time.sleep(360)
+        time.sleep(30)
+        # time.sleep(360)
         return (0, 0, 0, 0)
 
     def off(self):
@@ -151,7 +169,7 @@ class thermDaemon(Daemon):
         return (0, 0, 0, 0)
 
 
-    
+
     def getDBTargets(self):
         conDB = mdb.connect(CONN_PARAMS[0],CONN_PARAMS[1],CONN_PARAMS[2],CONN_PARAMS[3],port=CONN_PARAMS[4])
         cursor = conDB.cursor()
@@ -271,6 +289,9 @@ class thermDaemon(Daemon):
         auxTemp = 0
         auxBool = False
         trueCount = 0
+
+        self.init_module_info()
+
         self.configureGPIO()
 
         while True:
@@ -287,10 +308,8 @@ class thermDaemon(Daemon):
                 else:
                     auxElapsed = 0
 
-                print("here")
                 setTime, moduleID, targetTemp, targetMode, expiryTime = self.getDBTargets()
-                print("done")
-                log.debug(setTime, moduleID, targetTemp, targetMode, expiryTime)
+                logging.debug(str(setTime), str(moduleID), str(targetTemp), str(targetMode), str(expiryTime))
 
                 moduleID = int(moduleID)
                 targetTemp = int(targetTemp)
@@ -321,8 +340,10 @@ class thermDaemon(Daemon):
 
                 # Try to get directive from server. Otherwise operate in dumb mode
                 try:
+                    print("server mode")
                     self.server_mode()
                 except:
+                    print("fallback mode")
                     self.fallback_mode()
 
 

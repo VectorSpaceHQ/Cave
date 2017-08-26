@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python3
 #Based off the tutorial by adafruit here:
 # http://learn.adafruit.com/adafruits-raspberry-pi-lesson-11-ds18b20-temperature-sensing/software
 
@@ -39,6 +39,11 @@ def getTemp(sendToDB=False):
         temp_string = lines[1][equals_pos+2:]
         temp_c = float(temp_string) / 1000.0
         temp_f = temp_c * 9.0 / 5.0 + 32.0
+
+        # sanity check
+        if temp_f > 300 or temp_f < -50:
+            print("WARNING: thermostat temperature sensor may be failing")
+            print("Temp = " + str(temp_f))
         if sendToDB:
             conDB = mdb.connect(CONN_PARAMS[0],CONN_PARAMS[1],CONN_PARAMS[2],CONN_PARAMS[3],port=CONN_PARAMS[4])
             cursor = conDB.cursor()
@@ -53,3 +58,6 @@ def getTemp(sendToDB=False):
 
 
     return read_temp()
+
+if __name__ == "__main__":
+    print(getTemp())

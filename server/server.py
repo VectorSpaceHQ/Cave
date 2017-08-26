@@ -45,28 +45,32 @@ LOCATION = config.get('main', 'Location')
 
 
 class autoSetDaemon(Daemon):
-    
+
     def init_therm_set(self):
         """
         Initialize the thermostatSet table in the MySQL database.
         """
-        # 2017-08-15 08:56:43
-        timestamp = datetime.datetime.now().strftime('%Y-%m-%d %X')
-        moduleID = 1
-        target_temp = 70
-        mode = "fan"
-        expiry_time = (datetime.datetime.now()+ datetime.timedelta(minutes=1)).strftime('%Y-%m-%d %X') 
-        print(timestamp, expiry_time)
-        entryNo = 1
         conn = mdb.connect(CONN_PARAMS[0],CONN_PARAMS[1],CONN_PARAMS[2],
                            CONN_PARAMS[3],port=CONN_PARAMS[4])
         cursor = conn.cursor()
-        cursor.execute("""INSERT ThermostatSet SET moduleID=%s, targetTemp=%s, targetMode=%s, expiryTime=%s"""%(str(moduleID),str(target_temp),mode,str(expiry_time)))
-        conn.commit()
+
+        cursor.execute("SELECT * from ThermostatSet")
+        targs = cursor.fetchall()
+        if len(targs) == 0:
+            timestamp = datetime.datetime.now().strftime('%Y-%m-%d %X')
+            moduleID = 1
+            target_temp = 70
+            mode = "idle"
+            expiry_time = (datetime.datetime.now()+ datetime.timedelta(minutes=1)).strftime('%Y-%m-%d %X')
+            print(timestamp, expiry_time)
+            entryNo = 1
+            cursor.execute("""INSERT ThermostatSet SET moduleID=%s, targetTemp=%s, targetMode='%s', expiryTime='%s', entryNo=1"""%(int(moduleID),int(target_temp),mode,str(expiry_time)))
+
         cursor.close()
+        conn.commit()
         conn.close()
         print("done")
-        
+
     def get_therm_set(self):
         """
         Return the thermostat setpoint stored in the SQL database.
@@ -94,21 +98,20 @@ class autoSetDaemon(Daemon):
         """
         Return sensor data from the SensorData table.
         """
+        self.occupied = False
+
         conn = mdb.connect(CONN_PARAMS[0],CONN_PARAMS[1],CONN_PARAMS[2],CONN_PARAMS[3],port=CONN_PARAMS[4])
         cursor = conn.cursor()
         cursor.execute("SELECT * FROM SensorData ORDER BY readingID DESC LIMIT 50")
         sensor_data = cursor.fetchall()
         cursor.close()
 
-        # if no sensor data, wait until populated
         if len(sensor_data) == 0:
-            while True:
-                print("waiting for first data")
-                self.init_therm_set()
-                time.sleep(30)
-            
+            print("ERROR: There is no sensor data.")
+            print("       Get your thermostat up and running first.")
+            sys.exit()
+
         # Check for occupancy
-        self.occupied = False
         *A, occupancy_list = zip(*sensor_data[:20])
         for value in occupancy_list:
             if value is not None:
@@ -117,7 +120,7 @@ class autoSetDaemon(Daemon):
         last_sensor_time = sensor_data[-1][1]
         self.T_in = float(sensor_data[-1][-4])
         return
-    
+
 
     def backupDB(self):
         conn = mdb.connect(CONN_PARAMS[0],CONN_PARAMS[1],CONN_PARAMS[2],CONN_PARAMS[3],port=CONN_PARAMS[4])
@@ -227,6 +230,7 @@ class autoSetDaemon(Daemon):
         look at weather prediction, make decision, direct thermostat on what to do.
         """
         print("running")
+        self.init_therm_set()
         while True:
             try:
                 curModule, target_temp, mode, expTime = self.get_therm_set()
