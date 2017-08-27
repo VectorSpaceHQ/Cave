@@ -159,6 +159,8 @@ class autoSetDaemon(Daemon):
         observation = owm.weather_at_place(LOCATION)
         w = observation.get_weather()
         self.T_out = w.get_temperature('fahrenheit')['temp']
+        print("outside " + str(self.T_out))
+
 
         fc = owm.three_hours_forecast(LOCATION)
         f = fc.get_forecast()
@@ -224,6 +226,11 @@ class autoSetDaemon(Daemon):
         return
 
 
+    def mqtt(self):
+        import paho.mqtt.client as paho
+        client = paho.Client()
+
+
     def run(self, debug=False, plot=False, backup=False):
         """
         Every 60 seconds, get the sensor data, determine if building is occupied,
@@ -263,12 +270,14 @@ class autoSetDaemon(Daemon):
                     if self.occupied:
                         if (self.T_in < comfort_zone[0]):
                             if self.T_out > comfort_zone[0]:
+                                mode = 'idle'
                                 print("Outside temperature is in your comfort zone. Open the windows!")
                             else:
                                 mode = 'heat'
                                 target_temp = comfort_zone[0]
                         elif (self.T_in > comfort_zone[1]):
                             if self.T_out < comfort_zone[1]:
+                                mode = 'idle'
                                 print("Outside temperature is in your comfort zone. Open the windows!")
                             else:
                                mode = 'cool'

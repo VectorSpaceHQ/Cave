@@ -2,3 +2,4 @@ numpy
 pyowm
 configparser
 mysqlclient
+paho-mqtt

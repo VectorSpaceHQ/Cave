@@ -72,6 +72,9 @@ sudo raspi-config
 Advanced Options
 enable SPI and 1-Wire
 
+Install Mosquitto on the server for MQTT brokering.
+sudo apt-get install mosquitto
+
 
 Usage
 =====
