@@ -375,7 +375,6 @@ class thermDaemon(Daemon):
                 if dbElapsed > 6:
 
                     print("getting temp")
-                    getTemp(sendToDB=False)
                     self.report_sensor_data()
                     # def logStatus(self, mode, moduleID, targetTemp,actualTemp,hvacState):
                     self.logStatus(moduleID,targetTemp,tempList[moduleID-1],self.getHVACState())
