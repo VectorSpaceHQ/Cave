@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# coding: utf-8
 import sys
 import subprocess
 import os
@@ -44,6 +45,10 @@ CONN_PARAMS = (config.get('main','mysqlHost'), config.get('main','mysqlUser'),
         config.get('main','mysqlPass'), config.get('main','mysqlDatabase'),
         int(config.get('main','mysqlPort')))
 
+config = configparser.ConfigParser()
+config.read(dname+"/thermostat.conf")
+PIR_PIN = int(config.get('main', 'PIR_PIN'))
+
 
 class thermDaemon(Daemon):
     def init_module_info(self):
@@ -58,11 +63,16 @@ class thermDaemon(Daemon):
         cursor.execute("SELECT * from ModuleInfo")
         targs = cursor.fetchall()
         if len(targs) == 0:
-            cursor.execute("""INSERT ModuleInfo SET strDescription='thermostat', FirmwareVer='1', tempSense=1, humiditySense=0, lightSense=0, motionSense=0""")
+            cursor.execute("""INSERT ModuleInfo SET strDescription='thermostat', FirmwareVer='1', tempSense=1, humiditySense=0, lightSense=0, motionSense=1""")
 
         cursor.close()
         conn.commit()
         conn.close()
+
+    def getMotion(self, PIR_PIN):
+        print("MOVEMENT DETECTED")
+        self.occupied = 1
+        self.last_movement = time.time()
 
     def configureGPIO(self):
         GPIO.setmode(GPIO.BCM)
@@ -73,6 +83,7 @@ class thermDaemon(Daemon):
 
         GPIO.setup(PIR_PIN, GPIO.IN)
         GPIO.setup(TEMP_PIN, GPIO.IN)
+        GPIO.add_event_detect(PIR_PIN, GPIO.RISING, callback=self.getMotion)
 
         subprocess.Popen("echo " + str(ORANGE_PIN) + " > /sys/class/gpio/export", shell=True)
         subprocess.Popen("echo " + str(YELLOW_PIN) + " > /sys/class/gpio/export", shell=True)
@@ -279,6 +290,27 @@ class thermDaemon(Daemon):
         return hvacState
 
 
+
+    def report_sensor_data(self):
+        """
+        Get temperature, humidity, light, and motion sensor readings.
+        Send them to the SensorData table.
+        """
+        print("Reporting sensor data")
+        temp_f = "NULL"
+        humidity = "NULL"
+        light = "NULL"
+
+        temp_f = getTemp()
+
+        conDB = mdb.connect(CONN_PARAMS[0],CONN_PARAMS[1],CONN_PARAMS[2],CONN_PARAMS[3],port=CONN_PARAMS[4])
+        cursor = conDB.cursor()
+        cursor.execute("INSERT SensorData SET moduleID=1, location='hallway', temperature=%s, occupied=%s"%(str(temp_f), int(self.occupied)))
+        cursor.close()
+        conDB.commit()
+        conDB.close()
+
+
     def run(self,debug=False):
         """
         Every 60 seconds, send the thermostat temperature to the DB.
@@ -291,9 +323,11 @@ class thermDaemon(Daemon):
         auxTemp = 0
         auxBool = False
         trueCount = 0
+        movement_timeout = 60
+        self.occupied = 0
+        self.last_movement = time.time()
 
         self.init_module_info()
-
         self.configureGPIO()
 
         while True:
@@ -317,6 +351,9 @@ class thermDaemon(Daemon):
 
                 tempList = self.getTempList()
 
+                if (time.time() - self.last_movement) > movement_timeout:
+                    self.occupied = 0
+
                 if auxElapsed > AUX_TIMER*60:
 
                     curTemp = tempList[AUX_ID-1]
@@ -334,9 +371,12 @@ class thermDaemon(Daemon):
                     else:
                         auxBool = False
 
-                if dbElapsed > 60:
+                print("dbElapsed = " +str(dbElapsed))
+                if dbElapsed > 6:
+
                     print("getting temp")
-                    getTemp(sendToDB=True)
+                    getTemp(sendToDB=False)
+                    self.report_sensor_data()
                     # def logStatus(self, mode, moduleID, targetTemp,actualTemp,hvacState):
                     self.logStatus(moduleID,targetTemp,tempList[moduleID-1],self.getHVACState())
                     lastDB = time.time()

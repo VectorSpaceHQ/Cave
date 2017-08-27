@@ -20,7 +20,12 @@ CONN_PARAMS = (config.get('main','mysqlHost'), config.get('main','mysqlUser'),
                config.get('main','mysqlPass'), config.get('main','mysqlDatabase'),
                int(config.get('main','mysqlPort')))
 
+
 def getTemp(sendToDB=False):
+    """
+    Gets temperature from a ds18b20 sensor. Optionally sends value to database.
+    This database communication should be moved back into thermostat.py.
+    """
     subprocess.Popen('modprobe w1-gpio', shell=True)
     subprocess.Popen('modprobe w1-therm', shell=True)
     base_dir = '/sys/bus/w1/devices/'
@@ -58,6 +63,18 @@ def getTemp(sendToDB=False):
 
 
     return read_temp()
+
+def getMotion(sendToDB=False):
+    if sendToDB:
+        conDB = mdb.connect(CONN_PARAMS[0],CONN_PARAMS[1],CONN_PARAMS[2],CONN_PARAMS[3],port=CONN_PARAMS[4])
+        cursor = conDB.cursor()
+
+        cursor.execute("INSERT SensorData SET moduleID=1, location='hallway', temperature=%s"%str(temp_f))
+
+        cursor.close()
+        conDB.commit()
+        conDB.close()
+
 
 if __name__ == "__main__":
     print(getTemp())

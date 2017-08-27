@@ -287,8 +287,10 @@ class autoSetDaemon(Daemon):
                             print(self.T_in)
                             mode = 'idle'
 
+                    # All action changes should have a minimum time of 5 minutes
+                    # to prevent oscillations on the compressor.
                     if old_mode != mode:
-                        # All action changes should have a minimum time of 5 minutes to prevent oscillations on the compressor.
+
                         newExp = datetime.datetime.now() + datetime.timedelta(minutes=5)
                     else:
                         newExp = datetime.datetime.now()
