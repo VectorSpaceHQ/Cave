@@ -179,10 +179,33 @@ class autoSetDaemon(Daemon):
         return
 
 
+    def get_heat_rate(self):
+        """
+        Return heating and cooling rates based on prior data.
+        """
+        conn = mdb.connect(CONN_PARAMS[0],CONN_PARAMS[1],CONN_PARAMS[2],CONN_PARAMS[3],port=CONN_PARAMS[4])
+        cursor = conn.cursor()
+        cursor.execute("SELECT * FROM ThermostatLog WHERE coolOn = 1")
+        cooling_data = cursor.fetchall()
+        cursor.close()
+
+        time_list, id, target, actual, coolOn, heatOn, fanOn, auxOn = zip(*cooling_data)
+        time_list = [x.timestamp() for x in time_list]
+        dT = np.diff(actual)
+        dt = np.diff(time_list)
+        dTdt = (dT/dt)*3600
+
+
+        # Given a dataset of thermostat temperature and an outdoor temperature,
+        # Determine how long it typically take to reach target setpoint
+        # Calculate heat_rate
+        heat_rate = 1 # degree/hr
+
     def analyze_data(self):
         """
         Look through the history of temperatures. Determine,
-        time to reach setpoint, knowing the inside temperature and predicted outside temperature for the next 8 hrs.
+        time to reach setpoint, knowing the inside temperature
+        and predicted outside temperature for the next 8 hrs.
         active hours per day
         probability of occupancy
         """
@@ -192,17 +215,9 @@ class autoSetDaemon(Daemon):
         sensor_data = cursor.fetchall()
         cursor.close()
 
+        id, time_list, z, location, temp, b, c, occupancy_list = zip(*sensor_data)
 
-        for data in sensor_data[-1000:]:
-            time = data[1]
-            T_in = data[4]
-            # print(data)
-        # Given a dataset of thermostat temperature and an outdoor temperature,
-        # Determine how long it typically take to reach target setpoint
-        # Calculate heat_rate
-        heat_rate = 1 # degree/hr
-
-
+        self.get_heat_rate()
 
         # Determine the probability that the building will be occupied during
         # each hour of the current day.
@@ -214,7 +229,7 @@ class autoSetDaemon(Daemon):
         hours = np.arange(0,23)
         P_occupied = (0,0)
         self.pred_time_occupied = 1
-        id, time_list, z, location, temp, b, c, occupancy_list = zip(*sensor_data)
+
         for time, occupied in zip(time_list, occupancy_list):
             dow = time.weekday()
             if today == dow: # Look only at today
@@ -254,7 +269,7 @@ class autoSetDaemon(Daemon):
 
                     self.get_sensor_data()
                     self.get_weather()
-                    # self.analyze_data()
+                    self.analyze_data()
                     self.occupied = True # Testing
 
                     # Use prediction to determine if space should be treated as occupied
