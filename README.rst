@@ -53,7 +53,9 @@ Install supporting packages.
    sudo apt-get install python3-dev libmysqlclient-dev
 
 Generate the initial MySQL database.
-./server/generate_sqldb.sh mysqlusername password
+.. code:: shell
+
+   ./server/generate_sqldb.sh mysqlusername password
 
 Install python packages on the server and thermostat.
 sudo pip3 install -r ./server/requirements.txt
