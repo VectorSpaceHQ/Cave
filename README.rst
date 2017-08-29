@@ -42,13 +42,12 @@ git clone https://github.com/VectorSpaceHQ/RPiThermostat
 
 Install mysql server on the server.
 .. code:: shell
-
    sudo apt-get install mysql-server
 
 Install supporting packages.
 
 .. code:: shell
-          sudo apt-get install python3-dev libmysqlclient-dev
+   sudo apt-get install python3-dev libmysqlclient-dev
 
 Generate the initial MySQL database.
 ./server/generate_sqldb.sh mysqlusername password
