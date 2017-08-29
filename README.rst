@@ -53,13 +53,14 @@ Install supporting packages.
    sudo apt-get install python3-dev libmysqlclient-dev
 
 Generate the initial MySQL database.
-.. code:: shell
+::
 
    ./server/generate_sqldb.sh mysqlusername password
 
 Install python packages on the server and thermostat.
-sudo pip3 install -r ./server/requirements.txt
-sudo pip3 install -r ./thermostat/requirements.txt
+::
+   sudo pip3 install -r ./server/requirements.txt
+   sudo pip3 install -r ./thermostat/requirements.txt
 
 Modify the token files with appropriate values.
 ./thermostat/token.txt
