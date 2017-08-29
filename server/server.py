@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+# coding: utf-8
+
 import os
 import time
 import datetime
@@ -7,15 +9,12 @@ import pickle
 import numpy as np
 import math
 import re
-
 import pyowm
 import configparser
-
 from PythonDaemon import Daemon
-
 import MySQLdb as mdb
-
 import logging
+import paho.mqtt.client as paho
 
 
 #set working directory to where "autoSetDaemon.py" is
@@ -43,6 +42,10 @@ OUTSIDE_ID = config.get('main','WeatherModuleID')
 OWM_APIKEY = config.get('main', 'OWM_APIKey')
 LOCATION = config.get('main', 'Location')
 
+def on_connect(client, userdata, flags, rc):
+    print("CONNACK received with code %d." % (rc))
+def on_message(client, userdata, msg):
+    print(msg.topic+" "+str(msg.qos)+" "+str(msg.payload))
 
 class autoSetDaemon(Daemon):
 
@@ -242,7 +245,7 @@ class autoSetDaemon(Daemon):
 
 
     def mqtt(self):
-        import paho.mqtt.client as paho
+
         client = paho.Client()
 
 
@@ -357,6 +360,13 @@ class autoSetDaemon(Daemon):
 
 
 if __name__ == "__main__":
+    client = paho.Client()
+    client.on_connect = on_connect
+    client.on_message = on_message
+    client.connect("localhost", 1883)
+    client.subscribe("RPiThermostat/nodes", qos=1)
+    client.loop_start()
+
     daemon = autoSetDaemon(dname+'/autoSetDaemon.pid')
 
     if len(sys.argv) == 2:
