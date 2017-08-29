@@ -5,17 +5,6 @@ Overview
 This program's goal is to maximize the amount of time spent in the comfort zone while minimizing the energy spent when the building is occupied.
 
 
-
-HVAC 101
-=======
-https://github.com/Willseph/RaspberryPiThermostat
-
-Modifications
-===========
-- Removed the concept of modes.
-- Replaced plotly with d3, removing reliance of a third party resource to produce plots.
-- Written with no regard for python2.
-
 Structure
 ========
 This system is composed of a server, one or more thermostats, and optional nodes.
@@ -124,6 +113,11 @@ Testing
 ======
 This software can be tested entirely on a single Raspberry Pi. Install the sample database found in /test, then run both the server.py and thermostat.py programs.
 
+
+
+HVAC 101
+=======
+https://github.com/Willseph/RaspberryPiThermostat
 
 Warranty
 =======
