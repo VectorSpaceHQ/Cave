@@ -38,18 +38,16 @@ Nodes publish data using the MQTT protocol. This is done rather than modifying t
 Installation
 ===========
 clone the repository
-git clone https://github.com/VectorSpaceHQ/RPiThermostat
+::
+   git clone https://github.com/VectorSpaceHQ/RPiThermostat
 
 Install mysql server on the server.
-
-.. code:: shell
-
+::
    sudo apt-get install mysql-server
 
 Install supporting packages.
 
-.. code:: shell
-
+::
    sudo apt-get install python3-dev libmysqlclient-dev
 
 Generate the initial MySQL database.
@@ -63,29 +61,35 @@ Install python packages on the server and thermostat.
    sudo pip3 install -r ./thermostat/requirements.txt
 
 Modify the token files with appropriate values.
-./thermostat/token.txt
-./server/token.txt
+::
+   ./thermostat/token.txt
+   ./server/token.txt
 
 Modify the config files with appropriate values based on your wiring and preferences.
-./thermostat/thermostat.conf
-./server/server.conf
+::
+   ./thermostat/thermostat.conf
+   ./server/server.conf
 
 Enable SPI and 1-Wire on the RPi.
-sudo raspi-config
-Advanced Options
-enable SPI and 1-Wire
+::
+   sudo raspi-config
+>Advanced Options
+>enable SPI and 1-Wire
 
 Install Mosquitto on the server for MQTT brokering.
-sudo apt-get install mosquitto
+::
+   sudo apt-get install mosquitto
 
 
 Usage
 =====
 On the server,
-./server/server.py start
+::
+   ./server/server.py start
 
 On the RPi thermostat run,
-./thermostat/thermostat.py start
+::
+   ./thermostat/thermostat.py start
 
 
 MySQL database
