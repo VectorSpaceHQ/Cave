@@ -4,13 +4,7 @@ Overview
 =======
 This program's goal is to maximize the amount of time spent in the comfort zone while minimizing the energy spent when the building is occupied.
 
-TODO
-====
-- Take pictures
-- Draw wiring schematics for RPi and example nodes
-- Incorporate weather predictions
-- Add probability of occupancy calculations
-- Switch from RPI.GPIO to gpiozero library
+
 
 HVAC 101
 =======
