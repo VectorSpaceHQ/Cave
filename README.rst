@@ -46,13 +46,11 @@ Install mysql server on the server.
    sudo apt-get install mysql-server
 
 Install supporting packages.
-
 ::
    sudo apt-get install python3-dev libmysqlclient-dev
 
 Generate the initial MySQL database.
 ::
-
    ./server/generate_sqldb.sh mysqlusername password
 
 Install python packages on the server and thermostat.
