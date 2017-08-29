@@ -41,6 +41,7 @@ clone the repository
 git clone https://github.com/VectorSpaceHQ/RPiThermostat
 
 Install mysql server on the server.
+
 .. code:: shell
 
    sudo apt-get install mysql-server
