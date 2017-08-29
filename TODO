@@ -1,7 +1,10 @@
 TODO
 ====
 - Take pictures
-- Draw wiring schematics for RPi and esp nodes
+- Draw wiring schematics for RPi and esp nodes (Fritzing?)
 - Incorporate weather predictions
 - Add probability of occupancy calculations
 - Switch from RPI.GPIO to gpiozero library
+- Add D3 plots
+- Add UI that allows manual override and look at plots
+- Add config file (JSON?) to ESP8266 node

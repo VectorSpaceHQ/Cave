@@ -46,6 +46,16 @@ def on_connect(client, userdata, flags, rc):
     print("CONNACK received with code %d." % (rc))
 def on_message(client, userdata, msg):
     print(msg.topic+" "+str(msg.qos)+" "+str(msg.payload))
+    # timestamp, ID, loc, temp, humidity, light, occupied
+    timestamp = datetime.datetime.now().strftime('%Y-%m-%d %X')
+    moduleID, loc, temp, humid, light, occupied = str(msg.payload)
+
+    conDB = mdb.connect(CONN_PARAMS[0],CONN_PARAMS[1],CONN_PARAMS[2],CONN_PARAMS[3],port=CONN_PARAMS[4])
+    cursor = conDB.cursor()
+    cursor.execute("INSERT SensorData SET moduleID={}, location={}, temperature={}, humidity={}, light={}, occupied={}".format(moduleID, loc, temp, humid, light, occupied))
+    cursor.close()
+    conDB.commit()
+    conDB.close()
 
 class autoSetDaemon(Daemon):
 
