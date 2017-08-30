@@ -113,6 +113,8 @@ timeStamp, moduleID, targetTemp, targetMode, expiryTime, entryNo
 Testing
 ======
 This software can be tested entirely on a single Raspberry Pi. Install the sample database found in /test, then run both the server.py and thermostat.py programs.
+::
+    mysql -uroot -p hvac < ./test/hvac_data.txt
 
 
 
