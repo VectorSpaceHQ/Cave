@@ -38,11 +38,12 @@ Install mysql server on the server.
 
 Install supporting packages.
 ::
-   sudo apt-get install python3-dev libmysqlclient-dev
+   sudo apt-get install python3-dev python3-pip python3-setuptools libmysqlclient-dev
 
 Generate the initial MySQL database.
 ::
-   ./server/generate_sqldb.sh mysqlusername password
+   cd server
+   ./generate_sqldb.sh mysqlusername password
 
 Install required python packages.
 ::
@@ -112,6 +113,8 @@ timeStamp, moduleID, targetTemp, targetMode, expiryTime, entryNo
 Testing
 ======
 This software can be tested entirely on a single Raspberry Pi. Install the sample database found in /test, then run both the server.py and thermostat.py programs.
+::
+    mysql -uroot -p hvac < ./test/hvac_data.txt
 
 
 
