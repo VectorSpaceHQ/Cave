@@ -42,7 +42,8 @@ Install supporting packages.
 
 Generate the initial MySQL database.
 ::
-   ./server/generate_sqldb.sh mysqlusername password
+   cd server
+   ./generate_sqldb.sh mysqlusername password
 
 Install required python packages.
 ::
