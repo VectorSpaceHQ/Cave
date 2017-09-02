@@ -29,6 +29,7 @@ inactive_hysteresis = float(config.get('main','inactive_hysteresis'))
 
 # NOTE: As the name imlies, this is a test variable
 TEST_PIN = gpio.OutputDevice(int(config.get('main','ORANGE_PIN')))
+print('TEST',str(TEST_PIN.value))
 
 ORANGE_PIN = int(config.get('main','ORANGE_PIN'))
 YELLOW_PIN = int(config.get('main','YELLOW_PIN'))
@@ -107,7 +108,8 @@ class thermDaemon(Daemon):
         elif hvacState == (1,1,0,0): # it's cold out, why is the AC running?
         """
         # NOTE: For testing
-        testStatus = TEST_PIN.value()
+        testStatus = TEST_PIN.value
+        print('TEST_STATUS',str(testStatus))
 
         orangeStatus = int(subprocess.Popen("cat /sys/class/gpio/gpio" + str(ORANGE_PIN) + "/value", shell=True, stdout=subprocess.PIPE).stdout.read().strip())
         yellowStatus = int(subprocess.Popen("cat /sys/class/gpio/gpio" + str(YELLOW_PIN) + "/value", shell=True, stdout=subprocess.PIPE).stdout.read().strip())
@@ -400,13 +402,13 @@ class thermDaemon(Daemon):
                 print('Target Mode:',targetMode)
                 print('Temp from DB:', tempList)
                 print('Target Temp:', targetTemp)
-                print('TestPin State:', TEST_PIN.value())
-                # print('TestPin Pin:',TEST_PIN.pin())
+                print('TestPin State:', str(TEST_PIN.value))
+                # print('TestPin Pin:',str(TEST_PIN.pin))
 
                 time.sleep(5)
 
                 # NOTE: Testing
-                TEST_PIN.toggle()
+                TEST_PIN.value = True
 
             except Exception as e:
                 if debug==True:
