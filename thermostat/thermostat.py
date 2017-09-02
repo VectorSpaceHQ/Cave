@@ -28,7 +28,7 @@ active_hysteresis = float(config.get('main','active_hysteresis'))
 inactive_hysteresis = float(config.get('main','inactive_hysteresis'))
 
 # NOTE: As the name imlies, this is a test variable
-TEST_PIN = gpiozero.OutputDevice(int(config.get('main','ORANGE_PIN'))
+TEST_PIN = gpiozero.OutputDevice(int(config.get('main','ORANGE_PIN')))
 
 ORANGE_PIN = int(config.get('main','ORANGE_PIN'))
 YELLOW_PIN = int(config.get('main','YELLOW_PIN'))
