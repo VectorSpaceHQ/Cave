@@ -48,11 +48,7 @@ def getTemp():
 
         return temp_f
 
-
-
     return read_temp()
-
-
 
 
 if __name__ == "__main__":

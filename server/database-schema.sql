@@ -50,7 +50,7 @@ CREATE TABLE `SensorData` (
   `temperature` decimal(4,1) NOT NULL,
   `humidity` decimal(3,2) DEFAULT NULL,
   `light` decimal(3,2) DEFAULT NULL,
-  `occupied` tinyint(1) DEFAULT NULL,
+  `motion` tinyint(1) DEFAULT NULL,
   PRIMARY KEY (`readingID`),
   KEY `moduleID` (`moduleID`),
   CONSTRAINT `SensorData_ibfk_1` FOREIGN KEY (`moduleID`) REFERENCES `ModuleInfo` (`moduleID`)

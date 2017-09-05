@@ -75,6 +75,7 @@ class thermDaemon(Daemon):
     def getMotion(self, PIR_PIN):
         print("MOVEMENT DETECTED")
         self.occupied = 1
+        self.motion = 1
         self.last_movement = time.time()
 
     def configureGPIO(self):
@@ -308,7 +309,7 @@ class thermDaemon(Daemon):
 
         conDB = mdb.connect(CONN_PARAMS[0],CONN_PARAMS[1],CONN_PARAMS[2],CONN_PARAMS[3],port=CONN_PARAMS[4])
         cursor = conDB.cursor()
-        cursor.execute("INSERT SensorData SET moduleID=1, location='hallway', temperature=%s, occupied=%s"%(str(temp_f), int(self.occupied)))
+        cursor.execute("INSERT SensorData SET moduleID=1, location='hallway', temperature=%s, motion=%s"%(str(temp_f), int(self.motion)))
         cursor.close()
         conDB.commit()
         conDB.close()
@@ -355,6 +356,7 @@ class thermDaemon(Daemon):
 
                 if (time.time() - self.last_movement) > movement_timeout:
                     self.occupied = 0
+                    self.motion = 0
 
                 if auxElapsed > AUX_TIMER*60:
 
@@ -377,8 +379,7 @@ class thermDaemon(Daemon):
                 if dbElapsed > 60:
                     print("getting temp")
                     self.report_sensor_data()
-                    # def logStatus(self, mode, moduleID, targetTemp,actualTemp,hvacState):
-                    self.logStatus(moduleID,targetTemp,tempList[moduleID-1],self.getHVACState())
+                    self.logStatus(moduleID, targetTemp, tempList[moduleID-1], self.getHVACState())
                     lastDB = time.time()
                     print("done getting temp")
 
