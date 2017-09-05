@@ -117,6 +117,13 @@ This software can be tested entirely on a single Raspberry Pi. Install the sampl
     mysql -uroot -p hvac < ./test/hvac_data.txt
 
 
+Hardware
+=======
+Below is a wiring diagram for a Raspberry Pi zero with a temperature sensor, PIR sensor, and 4 channel relay.
+
+.. image:: ext/thermostat_schematic_bb.png
+           :align: center
+
 
 HVAC 101
 =======
