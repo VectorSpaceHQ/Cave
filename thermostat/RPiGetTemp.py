@@ -9,6 +9,7 @@ import MySQLdb as mdb
 import os
 
 import configparser
+from . import error
 
 abspath = os.path.abspath(__file__)
 dname = os.path.dirname(abspath)
@@ -43,11 +44,7 @@ def getTemp():
         temp_string = lines[1][equals_pos+2:]
         temp_c = float(temp_string) / 1000.0
         temp_f = temp_c * 9.0 / 5.0 + 32.0
-
-        # sanity check
-        if temp_f > 300 or temp_f < -50:
-            print("WARNING: thermostat temperature sensor may be failing")
-            print("Temp = " + str(temp_f))
+        error.check_temp(temp_f)
 
         return temp_f
 

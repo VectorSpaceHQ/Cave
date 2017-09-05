@@ -12,7 +12,10 @@ import MySQLdb as mdb
 
 from PythonDaemon import Daemon
 
-from RPiGetTemp import getTemp
+# from RPiGetTemp import getTemp
+
+from . import RPiGetTemp
+from . import error
 
 #set working directory to where "thermDaemonDB.py" is
 abspath = os.path.abspath(__file__)
@@ -301,7 +304,7 @@ class thermDaemon(Daemon):
         humidity = "NULL"
         light = "NULL"
 
-        temp_f = getTemp()
+        temp_f = RPiGetTemp.getTemp()
 
         conDB = mdb.connect(CONN_PARAMS[0],CONN_PARAMS[1],CONN_PARAMS[2],CONN_PARAMS[3],port=CONN_PARAMS[4])
         cursor = conDB.cursor()
@@ -326,7 +329,6 @@ class thermDaemon(Daemon):
         movement_timeout = 60
         self.occupied = 0
         self.last_movement = time.time()
-
         self.init_module_info()
         self.configureGPIO()
 
@@ -372,8 +374,7 @@ class thermDaemon(Daemon):
                         auxBool = False
 
                 print("dbElapsed = " +str(dbElapsed))
-                if dbElapsed > 6:
-
+                if dbElapsed > 60:
                     print("getting temp")
                     self.report_sensor_data()
                     # def logStatus(self, mode, moduleID, targetTemp,actualTemp,hvacState):
@@ -386,7 +387,9 @@ class thermDaemon(Daemon):
                     print("server mode")
                     self.server_mode()
                 except:
-                    print("fallback mode")
+                    msg = "Operating in fallback mode"
+                    print(msg)
+                    error.notify_email(msg)
                     self.fallback_mode()
 
 
@@ -400,6 +403,7 @@ class thermDaemon(Daemon):
             except Exception as e:
                 if debug==True:
                     print(e)
+                self.idle()
                 exc_type, exc_obj, exc_tb = sys.exc_info()
                 fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
 

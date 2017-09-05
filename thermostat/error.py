@@ -38,12 +38,12 @@ def check_temp(T):
         sys.exit()
 
     elif T > 110 or T < -32:
-      e ="Temperature value, {}, is out of bounds. Sensor is likely damaged.".format(T)
-      e += "\nSetting the system to idle mode."
-      print(e)
-      thermostat.idle()
-      notify_email(e)
-      sys.exit()
+        e ="Temperature value, {}, is out of bounds. Sensor is likely damaged.".format(T)
+        e += "\nSetting the system to idle mode."
+        print(e)
+        thermostat.idle()
+        notify_email(e)
+        sys.exit()
 
 
 
