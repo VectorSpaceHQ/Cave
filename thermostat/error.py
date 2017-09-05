@@ -23,6 +23,14 @@ def is_number(s):
         return False
 
 
+def check_compressor():
+    """
+    The compressor shouldn't run nonstop. Check to make sure
+    this isn't the case.
+    """
+    pass
+
+
 def check_temp(T):
     """
     Check a temperature value for sanity.
