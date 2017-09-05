@@ -8,6 +8,12 @@ from gpiozero import RGBLED
 import sys
 import thermostat
 
+#read values from the config file
+config = configparser.ConfigParser()
+config.read(dname+"/thermostat.conf")
+
+rgb = config.get('main','RGB_LED')
+email = config.get('main', 'email')
 
 def is_number(s):
     try:
@@ -40,17 +46,6 @@ def check_temp(T):
       sys.exit()
 
 
-def unknown_temp():
-    """
-    """
-    pass
-
-
-def bad_temp():
-    """
-    """
-    pass
-
 
 def no_network():
     """
@@ -61,19 +56,32 @@ def no_network():
 
 def notify_email(msg):
     """
-    This is hard
+    Email the passed message to address defined in config files.
     """
+
+    # Import smtplib for the actual sending function
+    import smtplib
+
+    # Import the email modules we'll need
+    from email.mime.text import MIMEText
+
+    msg = MIMEText()
+    msg['Subject'] = 'RPI Thermostat Warning'
+    msg['From'] = email
+    msg['To'] = email
+
+    # Send the message via our own SMTP server, but don't include the
+    # envelope header.
+    s = smtplib.SMTP('localhost')
+    s.sendmail(me, [you], msg.as_string())
+    s.quit()
 
 
 def notify_led():
     """
     blink LED indefinitely
     """
-    #read values from the config file
-    config = configparser.ConfigParser()
-    config.read(dname+"/thermostat.conf")
 
-    rgb = config.get('main','RGB_LED')
     print(rgb)
     led = RGBLED(2, 3, 4)
     while True:
