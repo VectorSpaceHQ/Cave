@@ -6,8 +6,12 @@
 
 from gpiozero import RGBLED
 import sys
-import thermostat
+import os
+import configparser
+import time
 
+abspath = os.path.abspath(__file__)
+dname = os.path.dirname(abspath)
 #read values from the config file
 config = configparser.ConfigParser()
 config.read(dname+"/thermostat.conf")
@@ -89,16 +93,14 @@ def notify_led():
     """
     blink LED indefinitely
     """
-
-    print(rgb)
-    led = RGBLED(2, 3, 4)
+    led = RGBLED(red=17, green=27, blue=22)
     while True:
-        led.color(1,0,1)
-        sleep(1)
+        led.color = (1,0,1)
+        time.sleep(1)
         led.off()
-        sleep(1)
-        led.color(1,1,0)
-        sleep(1)
+        time.sleep(1)
+        led.color = (1,1,0)
+        time.sleep(1)
 
 
 if __name__ == "__main__":

@@ -12,10 +12,8 @@ import MySQLdb as mdb
 
 from PythonDaemon import Daemon
 
-# from RPiGetTemp import getTemp
-
-from . import RPiGetTemp
-from . import error
+import RPiGetTemp
+import error
 
 #set working directory to where "thermDaemonDB.py" is
 abspath = os.path.abspath(__file__)
