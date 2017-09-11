@@ -380,8 +380,7 @@ class thermDaemon(Daemon):
                         auxBool = False
 
                 print("dbElapsed = " +str(dbElapsed))
-                if dbElapsed > 6:
-
+                if dbElapsed > 60:
                     print("getting temp")
                     self.report_sensor_data()
                     # def logStatus(self, mode, moduleID, targetTemp,actualTemp,hvacState):

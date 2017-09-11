@@ -167,28 +167,28 @@ class autoSetDaemon(Daemon):
         """
         Return the next hours temperature based on NOAA predictions.
         """
-        weatherDict = pywapi.get_weather_from_noaa("4771099")
+        # weatherDict = pywapi.get_weather_from_noaa("4771099")
         owm = pyowm.OWM(OWM_APIKEY)
         observation = owm.weather_at_id(4771099)
         w = observation.get_weather()
-        h = observation.get_humidity()
+        # h = observation.get_humidity()
         self.T_out = w.get_temperature('fahrenheit')['temp']
-        self.H_out = w.get_humidity()
+        # self.H_out = w.get_humidity()
         print("outside " + str(self.T_out))
-	      print("humidity " + str(self.H_out))
+        # print("humidity " + str(self.H_out))
 
-        fc = owm.three_hours_forecast("4771099")
-        f = fc.get_forecast()
-        for val in f:
-            print(val)	
+        # fc = owm.three_hours_forecast("4771099")
+        # f = fc.get_forecast()
+        # for val in f:
+        #     print(val)	
 
         # Store weather as sensor data for outside
-        conDB = mdb.connect(CONN_PARAMS[0],CONN_PARAMS[1],CONN_PARAMS[2],CONN_PARAMS[3],port=CONN_PARAMS[4])
-        cursor = conDB.cursor()
-        cursor.execute("INSERT SensorData SET moduleID=0, location='outside', temperature=%s , humidity =%s" % (str(self.T_out), str(self.H_out))
-        cursor.close()
-        conDB.commit()
-        conDB.close()
+        # conDB = mdb.connect(CONN_PARAMS[0],CONN_PARAMS[1],CONN_PARAMS[2],CONN_PARAMS[3],port=CONN_PARAMS[4])
+        # cursor = conDB.cursor()
+        # cursor.execute("INSERT SensorData SET moduleID=0, location='outside', temperature=%s , humidity =%s" % (str(self.T_out), str(self.H_out)))
+        # cursor.close()
+        # conDB.commit()
+        # conDB.close()
 
         return
 
