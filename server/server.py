@@ -332,7 +332,7 @@ class autoSetDaemon(Daemon):
         self.init_therm_set()
         while True:
             try:
-                curModule, target_temp, mode, expTime = self.get_therm_set()
+                curModule, self.target_temp, mode, expTime = self.get_therm_set()
                 old_mode = mode
                 curTime = datetime.datetime.now()
 
