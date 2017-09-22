@@ -217,7 +217,7 @@ class autoSetDaemon(Daemon):
         heat_rate = 1 # degree/hr
 
 
-    def calculate_comfort_zone(self):
+    def calc_comfort_zone(self):
         """
         As it becomes less likely that the space is occupied, the comfort zone grows.
         These equations are linear fits of Todd's table.
@@ -228,11 +228,8 @@ class autoSetDaemon(Daemon):
 
     def analyze_data(self):
         """
-        Look through the history of temperatures. Determine,
-        time to reach setpoint, knowing the inside temperature
-        and predicted outside temperature for the next 8 hrs.
-        active hours per day
-        probability of occupancy
+        Calc heating rate
+        Calc probability of occupancy
         """
         conn = mdb.connect(CONN_PARAMS[0],CONN_PARAMS[1],CONN_PARAMS[2],CONN_PARAMS[3],port=CONN_PARAMS[4])
         cursor = conn.cursor()
@@ -243,6 +240,7 @@ class autoSetDaemon(Daemon):
         id, time_list, z, location, temp, b, c, occupancy_list = zip(*sensor_data)
 
         self.calc_heat_rate()
+        self.P_occupancy = 100 # Testing
 
         # Determine the probability that the building will be occupied during
         # each hour of the current day.
@@ -296,20 +294,35 @@ class autoSetDaemon(Daemon):
                 print("Outside temperature is in your comfort zone. Open the windows!")
             else:
                 mode = 'heat'
-                target_temp = T_min
+                self.target_temp = T_min
         elif (self.T_in > T_max):
             if self.T_out < T_max:
                 mode = 'idle'
                 print("Outside temperature is in your comfort zone. Open the windows!")
             else:
                mode = 'cool'
-               target_temp = T_max
+               self.target_temp = T_max
         else:
             print("Temperature is in your comfort zone.")
             print(self.T_in)
             mode = 'idle'
 
         return mode
+
+    def set_thermostats(self, mode, expTime):
+        """
+        Update the ThermostatSet table to control thermostats with new directive.
+        """
+
+        conn = mdb.connect(CONN_PARAMS[0],CONN_PARAMS[1],CONN_PARAMS[2],CONN_PARAMS[3],port=CONN_PARAMS[4])
+        cursor = conn.cursor()
+
+        cursor.execute("UPDATE ThermostatSet SET moduleID=%s, targetTemp=%s, targetMode='%s', expiryTime='%s' WHERE entryNo=1"
+                       %(str(1),str(self.target_temp), mode, str(expTime)))
+        conn.commit()
+
+        cursor.close()
+        conn.close()
 
 
     def run(self, debug=False, plot=False, backup=False):
@@ -328,33 +341,20 @@ class autoSetDaemon(Daemon):
                 logging.debug("expTime: " + str(expTime))
 
                 if curTime>expTime:
-                    conn = mdb.connect(CONN_PARAMS[0],CONN_PARAMS[1],CONN_PARAMS[2],CONN_PARAMS[3],port=CONN_PARAMS[4])
-                    cursor = conn.cursor()
-
                     self.get_sensor_data()
                     self.get_weather()
                     self.analyze_data()
-                    self.calculate_comfort_zone()
+                    self.calc_comfort_zone()
                     mode = self.get_mode()
 
                     # All action changes should have a minimum time of 5 minutes
                     # to prevent oscillations on the compressor.
                     if old_mode != mode:
-                        newExp = datetime.datetime.now() + datetime.timedelta(minutes=5)
+                        expTime = datetime.datetime.now() + datetime.timedelta(minutes=5)
                     else:
-                        newExp = datetime.datetime.now()
+                        expTime = datetime.datetime.now()
 
-                    logging.debug(','.join([str(curModule), str(target_temp), str(mode), str(newExp)]))
-                    cursor.execute("UPDATE ThermostatSet SET moduleID=%s, targetTemp=%s, targetMode='%s', expiryTime='%s' WHERE entryNo=1"
-                           %(str(curModule),str(target_temp),mode,str(newExp)))
-                    conn.commit()
-                    cursor.close()
-                    conn.close()
-
-
-                #########################################
-                ##### Check about plotting
-                #########################################
+                    self.set_thermostats(mode, expTime)
 
 
                 #########################################
