@@ -125,14 +125,15 @@ class autoSetDaemon(Daemon):
             sys.exit()
 
         # Check for occupancy
-        *A, occupancy_list = zip(*sensor_data[:20])
-        for value in occupancy_list:
-            if value is not None:
-                self.occupied = True
+        # *A, occupancy_list = zip(*sensor_data[:20])
+        # for value in occupancy_list:
+        #     if value is not None:
+        #         self.occupied = True
+
+        self.determine_occupancy(sensor_data)
 
         last_sensor_time = sensor_data[-1][1]
         self.T_in = float(sensor_data[0][-4])
-        return
 
 
     def backupDB(self):
@@ -180,7 +181,7 @@ class autoSetDaemon(Daemon):
         # fc = owm.three_hours_forecast("4771099")
         # f = fc.get_forecast()
         # for val in f:
-        #     print(val)	
+        #     print(val)
 
         # # Store weather as sensor data for outside
         # conDB = mdb.connect(CONN_PARAMS[0],CONN_PARAMS[1],CONN_PARAMS[2],CONN_PARAMS[3],port=CONN_PARAMS[4])
@@ -193,7 +194,7 @@ class autoSetDaemon(Daemon):
         return
 
 
-    def get_heat_rate(self):
+    def calc_heat_rate(self):
         """
         Return heating and cooling rates based on prior data.
         """
@@ -215,6 +216,16 @@ class autoSetDaemon(Daemon):
         # Calculate heat_rate
         heat_rate = 1 # degree/hr
 
+
+    def calculate_comfort_zone(self):
+        """
+        As it becomes less likely that the space is occupied, the comfort zone grows.
+        These equations are linear fits of Todd's table.
+        """
+        self.comfort_zone = [0.21 * self.P_occupancy + 50,
+                        -0.15 * self.P_occupancy + 91.5]
+
+
     def analyze_data(self):
         """
         Look through the history of temperatures. Determine,
@@ -231,7 +242,7 @@ class autoSetDaemon(Daemon):
 
         id, time_list, z, location, temp, b, c, occupancy_list = zip(*sensor_data)
 
-        self.get_heat_rate()
+        self.calc_heat_rate()
 
         # Determine the probability that the building will be occupied during
         # each hour of the current day.
@@ -255,9 +266,50 @@ class autoSetDaemon(Daemon):
         return
 
 
+    def determine_occupancy(self, sensor_data):
+        """
+        Based on sensor data, determine if the space is occupied.
+        At least two sensors must agree.
+        """
+        self.occupied = True # Testing
+
+    def pred_future_occupancy(self):
+        """
+        Calculate the probability of future occupancy and use the building heat
+        rate to decide how to modify the current comfort zone.
+        """
+        pass
+
+
     def mqtt(self):
 
         client = paho.Client()
+
+
+    def get_mode(self):
+        T_min = self.comfort_zone[0]
+        T_max = self.comfort_zone[1]
+
+        if (self.T_in < T_min):
+            if self.T_out > T_min:
+                mode = 'idle'
+                print("Outside temperature is in your comfort zone. Open the windows!")
+            else:
+                mode = 'heat'
+                target_temp = T_min
+        elif (self.T_in > T_max):
+            if self.T_out < T_max:
+                mode = 'idle'
+                print("Outside temperature is in your comfort zone. Open the windows!")
+            else:
+               mode = 'cool'
+               target_temp = T_max
+        else:
+            print("Temperature is in your comfort zone.")
+            print(self.T_in)
+            mode = 'idle'
+
+        return mode
 
 
     def run(self, debug=False, plot=False, backup=False):
@@ -265,7 +317,6 @@ class autoSetDaemon(Daemon):
         Every 60 seconds, get the sensor data, determine if building is occupied,
         look at weather prediction, make decision, direct thermostat on what to do.
         """
-        print("running")
         self.init_therm_set()
         while True:
             try:
@@ -276,7 +327,6 @@ class autoSetDaemon(Daemon):
                 logging.debug("current time: " +str(curTime))
                 logging.debug("expTime: " + str(expTime))
 
-                print(curTime, expTime)
                 if curTime>expTime:
                     conn = mdb.connect(CONN_PARAMS[0],CONN_PARAMS[1],CONN_PARAMS[2],CONN_PARAMS[3],port=CONN_PARAMS[4])
                     cursor = conn.cursor()
@@ -284,42 +334,12 @@ class autoSetDaemon(Daemon):
                     self.get_sensor_data()
                     self.get_weather()
                     self.analyze_data()
-                    self.occupied = True # Testing
-
-                    # Use prediction to determine if space should be treated as occupied
-                    if not self.occupied:
-                        # Determine if building will soon be occupied
-                        # Determine if predicted occupancy is sooner than the system can reach the target
-                        self.analyze_data()
-                        # If the building is predicted to be occupied before it's possible for the HVAC to
-                        # reach its target, start operating the HVAC.
-                        # if self.pred_time_occupied < self.time_until_targ:
-                        #     self.occupied = True
-
-                    if self.occupied:
-                        if (self.T_in < comfort_zone[0]):
-                            if self.T_out > comfort_zone[0]:
-                                mode = 'idle'
-                                print("Outside temperature is in your comfort zone. Open the windows!")
-                            else:
-                                mode = 'heat'
-                                target_temp = comfort_zone[0]
-                        elif (self.T_in > comfort_zone[1]):
-                            if self.T_out < comfort_zone[1]:
-                                mode = 'idle'
-                                print("Outside temperature is in your comfort zone. Open the windows!")
-                            else:
-                               mode = 'cool'
-                               target_temp = comfort_zone[1]
-                        else:
-                            print("Temperature is in your comfort zone.")
-                            print(self.T_in)
-                            mode = 'idle'
+                    self.calculate_comfort_zone()
+                    mode = self.get_mode()
 
                     # All action changes should have a minimum time of 5 minutes
                     # to prevent oscillations on the compressor.
                     if old_mode != mode:
-
                         newExp = datetime.datetime.now() + datetime.timedelta(minutes=5)
                     else:
                         newExp = datetime.datetime.now()

@@ -95,7 +95,7 @@ SensorData
 -------------
 This table logs all of the sensor readings, including the thermostat(s).
 
-readingID, time, moduleID, location, temperature, humidity, light, occupied
+readingID, time, moduleID, location, temperature, humidity, light, sound, motion
 
 ThermostatLog
 -----------------
@@ -109,6 +109,13 @@ ThermostatSet
 This table provides the current directive for the thermostat(s). The server writes to this table and the thermostat reads from it.
 
 timeStamp, moduleID, targetTemp, targetMode, expiryTime, entryNo
+
+
+SystemLog
+-----------
+This table logs the state of the entire system.
+timeStamp, Tin, Tout, Poccupancy
+
 
 Testing
 ======
