@@ -111,7 +111,6 @@ class autoSetDaemon(Daemon):
         """
         Return sensor data from the SensorData table.
         """
-        self.occupied = False
 
         conn = mdb.connect(CONN_PARAMS[0],CONN_PARAMS[1],CONN_PARAMS[2],CONN_PARAMS[3],port=CONN_PARAMS[4])
         cursor = conn.cursor()
@@ -240,7 +239,6 @@ class autoSetDaemon(Daemon):
         id, time_list, z, location, temp, b, c, occupancy_list = zip(*sensor_data)
 
         self.calc_heat_rate()
-        self.P_occupancy = 100 # Testing
 
         # Determine the probability that the building will be occupied during
         # each hour of the current day.
@@ -266,10 +264,14 @@ class autoSetDaemon(Daemon):
 
     def determine_occupancy(self, sensor_data):
         """
-        Based on sensor data, determine if the space is occupied.
-        At least two sensors must agree.
+        Determine probability that space is currently occupied.
+        First check sensors for light, sound, motion.
+        If nothing, look at historical trends.
+
+        self.P_occupancy = 0 - 100%
         """
-        self.occupied = True # Testing
+        self.P_occupancy = 100 # testing
+
 
     def pred_future_occupancy(self):
         """
