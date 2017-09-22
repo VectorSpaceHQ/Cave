@@ -42,8 +42,10 @@ OUTSIDE_ID = config.get('main','WeatherModuleID')
 OWM_APIKEY = config.get('main', 'OWM_APIKey')
 LOCATION = config.get('main', 'Location')
 
+
 def on_connect(client, userdata, flags, rc):
     print("CONNACK received with code %d." % (rc))
+
 def on_message(client, userdata, msg):
     print(msg.topic+" "+str(msg.qos)+" "+str(msg.payload))
     # timestamp, ID, loc, temp, humidity, light, occupied
@@ -123,16 +125,10 @@ class autoSetDaemon(Daemon):
             print("       Get your thermostat up and running first.")
             sys.exit()
 
-        # Check for occupancy
-        # *A, occupancy_list = zip(*sensor_data[:20])
-        # for value in occupancy_list:
-        #     if value is not None:
-        #         self.occupied = True
-
-        self.determine_occupancy(sensor_data)
-
         last_sensor_time = sensor_data[-1][1]
         self.T_in = float(sensor_data[0][-4])
+
+        return sensor_data
 
 
     def backupDB(self):
@@ -262,7 +258,7 @@ class autoSetDaemon(Daemon):
         return
 
 
-    def determine_occupancy(self, sensor_data):
+    def determine_occupancy(self):
         """
         Determine probability that space is currently occupied.
         First check sensors for light, sound, motion.
@@ -270,6 +266,7 @@ class autoSetDaemon(Daemon):
 
         self.P_occupancy = 0 - 100%
         """
+        sensor_data = self.get_sensor_data()
         self.P_occupancy = 100 # testing
 
 
@@ -282,11 +279,10 @@ class autoSetDaemon(Daemon):
 
 
     def mqtt(self):
-
         client = paho.Client()
 
 
-    def get_mode(self):
+    def set_mode(self):
         T_min = self.comfort_zone[0]
         T_max = self.comfort_zone[1]
 
@@ -332,6 +328,7 @@ class autoSetDaemon(Daemon):
         Every 60 seconds, get the sensor data, determine if building is occupied,
         look at weather prediction, make decision, direct thermostat on what to do.
         """
+
         self.init_therm_set()
         while True:
             try:
@@ -339,15 +336,12 @@ class autoSetDaemon(Daemon):
                 old_mode = mode
                 curTime = datetime.datetime.now()
 
-                logging.debug("current time: " +str(curTime))
-                logging.debug("expTime: " + str(expTime))
-
                 if curTime>expTime:
-                    self.get_sensor_data()
+                    self.determine_occupancy()
                     self.get_weather()
                     self.analyze_data()
                     self.calc_comfort_zone()
-                    mode = self.get_mode()
+                    mode = self.set_mode()
 
                     # All action changes should have a minimum time of 5 minutes
                     # to prevent oscillations on the compressor.
