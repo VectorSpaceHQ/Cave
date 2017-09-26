@@ -101,7 +101,7 @@ ThermostatLog
 -----------------
 This table logs only the thermostat readings.
 
-timeStamp, mode, moduleID, targetTemp, actualTemp, coolOn, heatOn, fanOn, auxOn
+timeStamp, mode, moduleID, MinTemp, MaxTemp, actualTemp, coolOn, heatOn, fanOn, auxOn
 
 
 ThermostatSet
