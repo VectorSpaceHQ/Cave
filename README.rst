@@ -123,6 +123,8 @@ This software can be tested entirely on a single Raspberry Pi. Install the sampl
 ::
     mysql -uroot -p hvac < ./test/hvac_data.txt
 
+    python3 -m unittest discover
+
 
 Hardware
 =======

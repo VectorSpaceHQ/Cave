@@ -11,7 +11,6 @@ import configparser
 import MySQLdb as mdb
 
 from PythonDaemon import Daemon
-
 import RPiGetTemp
 import error
 
@@ -413,7 +412,6 @@ class thermDaemon(Daemon):
 
 if __name__ == "__main__":
     daemon = thermDaemon(dname+'/thermDaemon.pid')
-
 
     if len(sys.argv) == 2:
         if 'start' == sys.argv[1]:
