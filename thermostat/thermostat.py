@@ -8,13 +8,22 @@ import RPi.GPIO as GPIO
 import datetime
 import configparser
 import MySQLdb as mdb
+import logging
 
-# local imports
-from thermostat.PythonDaemon import Daemon
-# from PythonDaemon import Daemon
-# from . import PythonDaemon
-from thermostat import RPiGetTemp
-from thermostat import error
+# local imports. Can't figure out how this should actually be done
+try:
+    from thermostat.PythonDaemon import Daemon
+except:
+    from PythonDaemon import Daemon
+try:
+    from thermostat import RPiGetTemp
+except:
+    import RPiGetTemp
+try:
+    from thermostat import error
+except:
+    import error
+
 
 #set working directory to where "thermDaemonDB.py" is
 abspath = os.path.abspath(__file__)
@@ -417,15 +426,13 @@ if __name__ == "__main__":
 
     if len(sys.argv) == 2:
         if 'start' == sys.argv[1]:
-            daemon.start()
-#                        daemon.run()
+            daemon.run()
         elif 'stop' == sys.argv[1]:
             daemon.stop()
         elif 'restart' == sys.argv[1]:
             print("restarting")
             daemon.restart()
         elif 'debug' == sys.argv[1]:
-            import logging
             logging.basicConfig(filename='thermostat.log',level=logging.DEBUG)
             daemon.run(True)
         else:

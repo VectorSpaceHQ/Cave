@@ -16,7 +16,10 @@ import logging
 import paho.mqtt.client as paho
 
 # from PythonDaemon import Daemon
-from server.PythonDaemon import Daemon
+try:
+    from server.PythonDaemon import Daemon
+except:
+    from PythonDaemon import Daemon
 
 #set working directory to where "autoSetDaemon.py" is
 abspath = os.path.abspath(__file__)
@@ -33,8 +36,11 @@ CONN_PARAMS = (token.get('main','mysqlHost'), token.get('main','mysqlUser'),
 config = configparser.ConfigParser()
 config.read(dname+"/server.conf")
 
-T_MIN = float(config.get('main', 'Minimum_Temperature'))
-T_MAX = float(config.get('main', 'Maximum_Temperature'))
+# T_MIN = float(config.get('main', 'Minimum_Temperature'))
+# T_MAX = float(config.get('main', 'Maximum_Temperature'))
+T_MIN=50
+T_MAX=80
+comfort_offset = float(config.get('main', 'comfort_offset'))
 comfort_zone = [T_MIN, T_MAX]
 
 MYSQL_BACKUP_DIR = config.get('main','mysqlBackupDir')
@@ -218,8 +224,8 @@ class autoSetDaemon(Daemon):
         As it becomes less likely that the space is occupied, the comfort zone grows.
         These equations are linear fits of Todd's table.
         """
-        self.comfort_zone = [0.21 * self.P_occupancy + 50,
-                        -0.15 * self.P_occupancy + 91.5]
+        self.comfort_zone = [0.21 * self.P_occupancy + 50 - comfort_offset,
+                             -0.15 * self.P_occupancy + 91.5 + comfort_offset]
 
 
     def analyze_data(self):
@@ -399,7 +405,7 @@ if __name__ == "__main__":
 
     if len(sys.argv) == 2:
         if 'start' == sys.argv[1]:
-            daemon.start()
+            daemon.run()
         elif 'stop' == sys.argv[1]:
             daemon.stop()
         elif 'restart' == sys.argv[1]:

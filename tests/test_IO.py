@@ -19,29 +19,29 @@ def simple_getTemp(temp):
     return temp
 
 class BasicFunction(unittest.TestCase):
-    # def test_heat(self):
-    #     getTemp = MagicMock(return_value=3)
+    def test_heat(self):
+        getTemp = MagicMock(return_value=3)
 
-    #     abspath = os.path.abspath(__file__)
-    #     dname = os.path.dirname(abspath)
+        abspath = os.path.abspath(__file__)
+        dname = os.path.dirname(abspath)
 
-    #     server_daemon = autoSetDaemon(dname+'/autoSetDaemon.pid')
-    #     thermostat_daemon = thermDaemon(dname+'/thermDaemon.pid')
-    #     server_daemon.stop()
-    #     thermostat_daemon.stop()
+        server_daemon = autoSetDaemon(dname+'/autoSetDaemon.pid')
+        thermostat_daemon = thermDaemon(dname+'/thermDaemon.pid')
+        server_daemon.stop()
+        thermostat_daemon.stop()
 
-    #     server_thread = threading.Thread(target=server_daemon.run)
-    #     thermostat_thread = threading.Thread(target=thermostat_daemon.run)
-    #     server_thread.start()
-    #     thermostat_thread.start()
+        server_thread = threading.Thread(target=server_daemon.run)
+        thermostat_thread = threading.Thread(target=thermostat_daemon.run)
+        server_thread.start()
+        thermostat_thread.start()
 
-    #     print("This is a 10 second test of the heating system.")
-    #     print("Heating requires the compressor and reverse airflow")
-    #     time.sleep(10)
-    #     print("DONE")
+        print("This is a 10 second test of the heating system.")
+        print("Heating requires the compressor and reverse airflow")
+        time.sleep(10)
+        print("DONE")
         
-    #     server_daemon.stop()
-    #     thermostat_daemon.stop()
+        server_daemon.stop()
+        thermostat_daemon.stop()
 
         
     def test_cool(self):

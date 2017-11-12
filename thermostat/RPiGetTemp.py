@@ -10,6 +10,10 @@ import os
 
 import configparser
 import thermostat
+try:
+    import error
+except:
+    pass
 
 abspath = os.path.abspath(__file__)
 dname = os.path.dirname(abspath)
