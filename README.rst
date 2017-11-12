@@ -1,4 +1,4 @@
-An open source, Raspberry Pi based, smart thermostat. Forked from the work done by the Nooganeer (http://www.nooganeer.com/his/).
+An open source, low-cost, Raspberry Pi powered, smart thermostat.
 
 Overview
 =======
