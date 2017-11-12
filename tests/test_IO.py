@@ -3,7 +3,6 @@
 # Usage: python3 -m unittest discover -t ..
 # Mock different temperature readings
 # Check pin states to confirm correct behavior
-# from tests.context import thermostat
 import unittest
 import time
 from unittest.mock import patch
