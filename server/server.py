@@ -11,11 +11,12 @@ import math
 import re
 import pyowm
 import configparser
-from PythonDaemon import Daemon
 import MySQLdb as mdb
 import logging
 import paho.mqtt.client as paho
 
+# from PythonDaemon import Daemon
+from server.PythonDaemon import Daemon
 
 #set working directory to where "autoSetDaemon.py" is
 abspath = os.path.abspath(__file__)
@@ -286,17 +287,17 @@ class autoSetDaemon(Daemon):
         T_min = self.comfort_zone[0]
         T_max = self.comfort_zone[1]
 
-        if (self.T_in < T_min):
+        if self.T_in < T_min:
             if self.T_out > T_min:
                 mode = 'idle'
                 print("Outside temperature is in your comfort zone. Open the windows!")
             else:
                 mode = 'heat'
                 self.target_temp = T_min
-        elif (self.T_in > T_max):
+        elif self.T_in > T_max:
             if self.T_out < T_max:
                 mode = 'idle'
-                print("Outside temperature is in your comfort zone. Open the windows!")
+                print("The inside temperature is above your comfort zone and the outside temperature is below. Open the windows!")
             else:
                mode = 'cool'
                self.target_temp = T_max
@@ -323,7 +324,7 @@ class autoSetDaemon(Daemon):
         conn.close()
 
 
-    def run(self, debug=False, plot=False, backup=False):
+    def run(self, wait_time=5, debug=False, plot=False, backup=False):
         """
         Every 60 seconds, get the sensor data, determine if building is occupied,
         look at weather prediction, make decision, direct thermostat on what to do.
@@ -346,7 +347,7 @@ class autoSetDaemon(Daemon):
                     # All action changes should have a minimum time of 5 minutes
                     # to prevent oscillations on the compressor.
                     if old_mode != mode:
-                        expTime = datetime.datetime.now() + datetime.timedelta(minutes=5)
+                        expTime = datetime.datetime.now() + datetime.timedelta(minutes=wait_time)
                     else:
                         expTime = datetime.datetime.now()
 
@@ -406,6 +407,10 @@ if __name__ == "__main__":
         elif 'debug' == sys.argv[1]:
             logging.basicConfig(filename='server.log',level=logging.DEBUG)
             daemon.run(True)
+        elif 'test' == sys.argv[1]:
+            now = time.time()
+            while time.time() < now + time.timedelta(sec=5):
+                daemon.run()
         else:
             print("Unknown command")
             sys.exit(2)

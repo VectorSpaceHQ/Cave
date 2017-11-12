@@ -8,39 +8,65 @@ import unittest
 import time
 from unittest.mock import patch
 from unittest.mock import MagicMock
-import thermostat.RPiGetTemp as RPiGetTemp
+from thermostat.RPiGetTemp import getTemp
 import thermostat
 import server
 from server.server import autoSetDaemon
 from thermostat.thermostat import thermDaemon
 import os
+import threading
 
 def simple_getTemp(temp):
     return temp
 
 class BasicFunction(unittest.TestCase):
-    def test_hot(self):
+    # def test_heat(self):
+    #     getTemp = MagicMock(return_value=3)
+
+    #     abspath = os.path.abspath(__file__)
+    #     dname = os.path.dirname(abspath)
+
+    #     server_daemon = autoSetDaemon(dname+'/autoSetDaemon.pid')
+    #     thermostat_daemon = thermDaemon(dname+'/thermDaemon.pid')
+    #     server_daemon.stop()
+    #     thermostat_daemon.stop()
+
+    #     server_thread = threading.Thread(target=server_daemon.run)
+    #     thermostat_thread = threading.Thread(target=thermostat_daemon.run)
+    #     server_thread.start()
+    #     thermostat_thread.start()
+
+    #     print("This is a 10 second test of the heating system.")
+    #     print("Heating requires the compressor and reverse airflow")
+    #     time.sleep(10)
+    #     print("DONE")
+        
+    #     server_daemon.stop()
+    #     thermostat_daemon.stop()
+
+        
+    def test_cool(self):
         # @patch(RPiGetTemp.getTemp, simple_getTemp)
-        RPiGetTemp.getTemp = MagicMock(return_value=3)
+        getTemp = MagicMock(return_value=100)
 
         abspath = os.path.abspath(__file__)
         dname = os.path.dirname(abspath)
 
-        
-        # server_daemon = autoSetDaemon(dname+'/autoSetDaemon.pid')
+        server_daemon = autoSetDaemon(dname+'/autoSetDaemon.pid')
         thermostat_daemon = thermDaemon(dname+'/thermDaemon.pid')
-        # server_daemon.stop()
-        # server_daemon.run()
+
+        server_thread = threading.Thread(target=server_daemon.run)
+        thermostat_thread = threading.Thread(target=thermostat_daemon.run)
+        server_thread.start()
+        thermostat_thread.start()
+
+        print("This is a 10 second test of the cooling system.")
+        print("Cooling requires the compressor and reverse airflow")
+        time.sleep(10)
+        server_daemon.stop()
         thermostat_daemon.stop()
-        thermostat_daemon.run()
 
 
-        
-        for i in range(10):
-            print("adam")
-            time.sleep(1)
-        print("DONE")
-        daemon.stop()
 
 if __name__ == '__main__':
     unittest.main()
