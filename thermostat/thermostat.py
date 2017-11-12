@@ -7,12 +7,14 @@ import time
 import RPi.GPIO as GPIO
 import datetime
 import configparser
-
 import MySQLdb as mdb
 
-from PythonDaemon import Daemon
-import RPiGetTemp
-import error
+# local imports
+from thermostat.PythonDaemon import Daemon
+# from PythonDaemon import Daemon
+# from . import PythonDaemon
+from thermostat import RPiGetTemp
+from thermostat import error
 
 #set working directory to where "thermDaemonDB.py" is
 abspath = os.path.abspath(__file__)

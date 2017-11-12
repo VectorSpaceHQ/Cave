@@ -3,7 +3,7 @@
 # Usage: python3 -m unittest discover -t ..
 # Mock different temperature readings
 # Check pin states to confirm correct behavior
-from .context import thermostat
+# from tests.context import thermostat
 import unittest
 import time
 from unittest.mock import patch
@@ -16,18 +16,21 @@ import os
 def simple_getTemp(temp):
     return temp
 
-class TestStringMethods(unittest.TestCase):
+class BasicFunction(unittest.TestCase):
     def test_hot(self):
         # @patch(RPiGetTemp.getTemp, simple_getTemp)
         RPiGetTemp.getTemp = MagicMock(return_value=3)
-        simple_getTemp(70)
+        print(simple_getTemp(70))
         abspath = os.path.abspath(__file__)
         dname = os.path.dirname(abspath)
         daemon = thermDaemon(dname+'/thermDaemon.pid')
-        daemon.start()
-        print(RPiGetTemp.getTemp)
+        daemon.stop()
+        daemon.run()
         for i in range(10):
+            print("adam")
             time.sleep(1)
+        print("DONE")
+        daemon.stop()
 
 if __name__ == '__main__':
     unittest.main()

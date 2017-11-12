@@ -9,7 +9,7 @@ import MySQLdb as mdb
 import os
 
 import configparser
-import error
+import thermostat
 
 abspath = os.path.abspath(__file__)
 dname = os.path.dirname(abspath)
