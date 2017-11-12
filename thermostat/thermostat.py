@@ -428,10 +428,6 @@ if __name__ == "__main__":
             import logging
             logging.basicConfig(filename='thermostat.log',level=logging.DEBUG)
             daemon.run(True)
-        elif 'test' == sys.argv[1]:
-            now = time.time()
-            while time.time() < now + time.timedelta(sec=5):
-                daemon.run()
         else:
             print("Unknown command")
             sys.exit(2)
