@@ -306,7 +306,7 @@ class thermDaemon(Daemon):
     def report_sensor_data(self):
         """
         Get temperature, humidity, light, and motion sensor readings.
-        Send them to the SensorData table.
+        Send them to the SensorData table in the server's database.
         """
         print("Reporting sensor data")
         temp_f = "NULL"
@@ -325,7 +325,7 @@ class thermDaemon(Daemon):
 
     def run(self,debug=False):
         """
-        Every 60 seconds, send the thermostat temperature to the DB.
+        Every 60 seconds, send the thermostat temperature to the server's DB.
         Try to ask the server for directions. If the server cannot be reached, operate in a dumb
         mode that simply looks
         Every 5 seconds, set the HVAC state.
