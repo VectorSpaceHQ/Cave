@@ -45,6 +45,8 @@ Generate the initial MySQL database.
    cd server
    ./generate_sqldb.sh mysqlusername password
 
+You can confirm that the hvac database was added to your mysql server, by loging in at http://localhost/phpmyadmin/
+
 Install required python packages.
 ::
    sudo pip3 install -r ./server/requirements.txt

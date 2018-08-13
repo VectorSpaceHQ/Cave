@@ -109,4 +109,6 @@ CREATE TABLE `ThermostatSet` (
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
+INSERT INTO `hvac`.`ModuleInfo` (`moduleID`, `strDescription`, `firmwareVer`, `tempSense`, `humiditySense`, `lightSense`, `motionSense`) VALUES ('1', 'RPI thermostat 1', '1', '1', '0', '1', '1');
+
 -- Dump completed on 2015-01-05 22:14:07
