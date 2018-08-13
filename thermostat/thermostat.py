@@ -335,7 +335,7 @@ class thermDaemon(Daemon):
         auxTemp = 0
         auxBool = False
         trueCount = 0
-        movement_timeout = 60
+        movement_timeout = 60 # small only for debugging
         self.occupied = 0
         self.last_movement = time.time()
         self.init_module_info()
@@ -363,6 +363,7 @@ class thermDaemon(Daemon):
                 tempList = self.getTempList()
 
                 if (time.time() - self.last_movement) > movement_timeout:
+                    print("movement has stopped")
                     self.occupied = 0
                     self.motion = 0
 
@@ -385,11 +386,9 @@ class thermDaemon(Daemon):
 
                 print("dbElapsed = " +str(dbElapsed))
                 if dbElapsed > 60:
-                    print("getting temp")
                     self.report_sensor_data()
                     self.logStatus(moduleID, targetTemp, tempList[moduleID-1], self.getHVACState())
                     lastDB = time.time()
-                    print("done getting temp")
 
                 # Try to get directive from server. Otherwise operate in fallback mode
                 try:
