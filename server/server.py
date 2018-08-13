@@ -346,12 +346,15 @@ class autoSetDaemon(Daemon):
                 if curTime>expTime:
                     self.determine_occupancy()
                     self.get_weather()
+                    print("b")
                     self.analyze_data()
+                    print("HERE")
                     self.calc_comfort_zone()
                     mode = self.set_mode()
 
                     # All action changes should have a minimum time of 5 minutes
                     # to prevent oscillations on the compressor.
+                    print(mode, oldmode)
                     if old_mode != mode:
                         expTime = datetime.datetime.now() + datetime.timedelta(minutes=wait_time)
                     else:
@@ -378,12 +381,13 @@ class autoSetDaemon(Daemon):
 
                 time.sleep(60)
 
-            except Exception:#IOError:#
+            except Exception as e:#IOError:#
+                print(e)
                 if debug:
                     raise
                 exc_type, exc_obj, exc_tb = sys.exc_info()
                 fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
-                fobj = open(dname+'/logs/autoSetDaemon.log','a')
+                fobj = open(dname+'/autoSetDaemon.log','a')
 
                 fobj.write('Error occurred at %s \n'%(datetime.datetime.now().strftime('%m-%d-%y-%X')))
                 fobj.write(str(exc_type.__name__)+'\n')
