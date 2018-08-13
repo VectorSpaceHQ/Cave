@@ -41,7 +41,7 @@ def main():
     plt.plot(time, T_actual, label='actual')
     plt.plot(time, T_target, label='target')
     plt.plot(time, T_outside, label='outside')
-    plt.legend(loc='auto')
+    plt.legend(loc='best')
     plt.ylabel("Temperature (F)")
     plt.xlabel("Time")
     plt.save("Temperatures.png")
