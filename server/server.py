@@ -14,6 +14,7 @@ import configparser
 import MySQLdb as mdb
 import logging
 import paho.mqtt.client as paho
+from operator import itemgetter
 
 # from PythonDaemon import Daemon
 try:
@@ -226,6 +227,8 @@ class autoSetDaemon(Daemon):
         """
         self.comfort_zone = [0.21 * self.P_occupancy + 50 - comfort_offset,
                              -0.15 * self.P_occupancy + 91.5 + comfort_offset]
+        print("Setting comfort zone based on occupancy")
+        print(self.comfort_zone)
 
 
     def analyze_data(self):
@@ -274,7 +277,10 @@ class autoSetDaemon(Daemon):
         self.P_occupancy = 0 - 100%
         """
         sensor_data = self.get_sensor_data()
-        self.P_occupancy = 100 # testing
+        motion = [x[7] for x in sensor_data[:20]]
+        print(motion)
+        self.P_occupancy = min((motion.count(1)+5) / len(motion), 1) # skew the count
+        print("{}% chance there's someone here".format(self.P_occupancy*100))
 
 
     def pred_future_occupancy(self):
@@ -352,7 +358,6 @@ class autoSetDaemon(Daemon):
 
                     # All action changes should have a minimum time of 5 minutes
                     # to prevent oscillations on the compressor.
-                    print(mode, oldmode)
                     if old_mode != mode:
                         expTime = datetime.datetime.now() + datetime.timedelta(minutes=wait_time)
                     else:

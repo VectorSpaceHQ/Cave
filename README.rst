@@ -138,4 +138,24 @@ Below is a wiring diagram for a Raspberry Pi zero with a temperature sensor, PIR
 
 HVAC 101
 =======
-https://github.com/Willseph/RaspberryPiThermostat
+The following HVAC information is coppied directly from, https://github.com/Willseph/RaspberryPiThermostat
+
+HVAC 101
+
+HVAC (heating, ventilating, and air conditioning) can be implemented in different ways within a house or apartment, and varies for different countries based on the wiring and such. I'm not an expert in HVAC systems, I pretty much just learned enough to get by for this project, but here's a pretty useful guide: http://wiki.xtronics.com/index.php/Thermostat_signals_and_wiring
+
+My particular apartment uses a heat pump, which uses the very same compressor action for the air conditioner. The only difference is the air flow. This makes it possible to, in my case, use four wires from the HVAC panel behind the original thermostat for this project:
+
+R (Red): This is the "common" wire, meaning that a circuit is completed when any of the other wires are connected to this one, hence the relay module.
+G (Green): This is the signal for the fan, which becomes activated when connected to R.
+Y (Yellow): This is the signal for the compressor. By default, the air flow is set to blow heat into the apartment.
+O (Orange): This is the signal to reverse the air flow from the compressor. With Y and O both active, the flow changes to blow cool air into the apartment.
+I broke this down to a pretty simple formula while I started writing the software for the controller:
+
+R + G = Fan
+R + G + Y = Heater
+R + G + Y + O = Air conditioner
+
+It's also very important to note that the wires coming out of my HVAC use a low voltage at 24V, not mains power. With a relay module completing the circuits, it should still work with mains electricity, but it is very dangerous and you should NOT mess with mains power unless you know exactly what you're doing! An accident involving high voltage and current can very easily kill you.
+
+If your home HVAC does not use a compressor heat pump or for another reason you cannot use the same setup I'm using, you will have to do some research and potentially adjust the hvaccontroller.py script accordingly.
