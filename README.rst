@@ -116,7 +116,7 @@ timeStamp, moduleID, targetTemp, targetMode, expiryTime, entryNo
 SystemLog
 -----------
 This table logs the state of the entire system.
-timeStamp, Tin, Tout, Poccupancy
+timeStamp, Tthermostat, Toutside, Ttarget, Poccupancy
 
 
 Testing
