@@ -346,9 +346,7 @@ class autoSetDaemon(Daemon):
                 if curTime>expTime:
                     self.determine_occupancy()
                     self.get_weather()
-                    print("b")
-                    self.analyze_data()
-                    print("HERE")
+                    # self.analyze_data()
                     self.calc_comfort_zone()
                     mode = self.set_mode()
 
