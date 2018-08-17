@@ -188,8 +188,7 @@ class thermDaemon(Daemon):
         GPIO.output(AUX_PIN, False)
         #delay to preserve compressor
         print('Idling...')
-        time.sleep(3)
-        # time.sleep(360)
+        time.sleep(360)
         return (0, 0, 0, 0)
 
     def off(self):
@@ -197,9 +196,7 @@ class thermDaemon(Daemon):
         GPIO.output(YELLOW_PIN, False)
         GPIO.output(GREEN_PIN, False)
         GPIO.output(AUX_PIN, False)
-
         return (0, 0, 0, 0)
-
 
 
     def getDBTargets(self):
@@ -448,7 +445,7 @@ if __name__ == "__main__":
             print("restarting")
             daemon.restart()
         elif 'debug' == sys.argv[1]:
-            logging.basicConfig(filename='thermostat.log',level=logging.DEBUG)
+            logging.basicConfig(filename=dname+'/thermostat.log',level=logging.DEBUG)
             try:
                 daemon.run(True)
             except KeyboardInterrupt:

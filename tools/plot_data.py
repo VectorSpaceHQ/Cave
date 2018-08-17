@@ -10,7 +10,7 @@ dname = os.path.dirname(abspath) + "/../server"
 os.chdir(dname)
 
 token = configparser.ConfigParser()
-token.read(dname+"/token.txt")
+token.read(dname+"../thermostat/token.txt")
 
 CONN_PARAMS = (token.get('main','mysqlHost'), token.get('main','mysqlUser'),
                token.get('main','mysqlPass'), token.get('main','mysqlDatabase'),
@@ -44,7 +44,8 @@ def main():
     plt.legend(loc='best')
     plt.ylabel("Temperature (F)")
     plt.xlabel("Time")
-    plt.save("Temperatures.png")
+    plt.show()
+    # plt.save("Temperatures.png")
     
 
 if __name__ == '__main__':

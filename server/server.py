@@ -280,8 +280,8 @@ class autoSetDaemon(Daemon):
         sensor_data = self.get_sensor_data()
         motion = [x[7] for x in sensor_data[:20]]
         print(motion)
-        self.P_occupancy = min((motion.count(1)**3) / len(motion), 1) # skew the count. the more counts, the more likely they're real
-        print("{}% chance there's someone here".format(self.P_occupancy*100))
+        self.P_occupancy = 100 * min((motion.count(1)**3) / len(motion), 1) # skew the count. the more counts, the more likely they're real
+        print("{}% chance there's someone here".format(self.P_occupancy))
 
 
     def pred_future_occupancy(self):
@@ -300,6 +300,11 @@ class autoSetDaemon(Daemon):
         T_min = self.comfort_zone[0]
         T_max = self.comfort_zone[1]
 
+        # if self.mode == 'idle':
+        #     self.T_in < T_min - inactive_hysteresis
+
+
+            
         if self.T_in < T_min:
             if self.T_out > T_min:
                 mode = 'idle'
@@ -318,6 +323,8 @@ class autoSetDaemon(Daemon):
             print("Temperature is in your comfort zone.")
             print(self.T_in)
             mode = 'idle'
+
+        self.mode = mode
 
         return mode
 
@@ -378,7 +385,7 @@ class autoSetDaemon(Daemon):
 
                     self.set_thermostats(mode, expTime)
 
-                self.log_data()
+                # self.log_data();
                 
                 #########################################
                 ##### Check about backups
