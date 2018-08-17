@@ -45,6 +45,10 @@ AUX_PIN = int(config.get('main','AUX_PIN'))
 PIR_PIN = int(config.get('main','PIR_PIN'))
 TEMP_PIN = int(config.get('main','TEMP_PIN'))
 
+red_LED = 17
+green_LED = 27
+blue_LED = 22
+
 AUX_ID = int(config.get('main','AUX_ID'))
 
 AUX_TIMER = 10 #minutes
@@ -92,6 +96,10 @@ class thermDaemon(Daemon):
         GPIO.setup(YELLOW_PIN, GPIO.OUT)
         GPIO.setup(GREEN_PIN, GPIO.OUT)
         GPIO.setup(AUX_PIN, GPIO.OUT)
+
+        GPIO.setup(red_LED, GPIO.OUT)
+        GPIO.setup(green_LED, GPIO.OUT)
+        GPIO.setup(blue_LED, GPIO.OUT)
 
         GPIO.setup(PIR_PIN, GPIO.IN)
         GPIO.setup(TEMP_PIN, GPIO.IN)
@@ -343,6 +351,11 @@ class thermDaemon(Daemon):
 
         while True:
             try:
+                if GPIO.input(green_LED) == 1:
+                    GPIO.output(green_LED, 0)
+                else:
+                    GPIO.output(green_LED, 1)
+                    
                 abspath = os.path.abspath(__file__)
                 dname = os.path.dirname(abspath)
                 os.chdir(dname)
@@ -417,6 +430,8 @@ class thermDaemon(Daemon):
 
                 logging.debug("error occurred at " + str(datetime.datetime.now()))
                 logging.debug(fname)
+
+                GPIO.cleanup()
                 return
 
 
@@ -425,6 +440,7 @@ if __name__ == "__main__":
 
     if len(sys.argv) == 2:
         if 'start' == sys.argv[1]:
+            
             daemon.run()
         elif 'stop' == sys.argv[1]:
             daemon.stop()
@@ -433,7 +449,10 @@ if __name__ == "__main__":
             daemon.restart()
         elif 'debug' == sys.argv[1]:
             logging.basicConfig(filename='thermostat.log',level=logging.DEBUG)
-            daemon.run(True)
+            try:
+                daemon.run(True)
+            except KeyboardInterrupt:
+                GPIO.cleanup()
         else:
             print("Unknown command")
             sys.exit(2)

@@ -1,0 +1,10 @@
+[Unit]
+Description=Cave server
+After=network.target
+
+[Service]
+ExecStart=/home/pi/Cave/server/server.py start
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target

@@ -418,7 +418,7 @@ if __name__ == "__main__":
         elif 'restart' == sys.argv[1]:
             daemon.restart()
         elif 'debug' == sys.argv[1]:
-            logging.basicConfig(filename='server.log',level=logging.DEBUG)
+            logging.basicConfig(filename=dname+'/server.log',level=logging.DEBUG)
             daemon.run(True)
         else:
             print("Unknown command")
