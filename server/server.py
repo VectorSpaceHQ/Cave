@@ -22,9 +22,10 @@ try:
 except:
     from PythonDaemon import Daemon
 
-#set working directory to where "autoSetDaemon.py" is
+#set working directory to where "server.py" is
 abspath = os.path.abspath(__file__)
 dname = os.path.dirname(abspath)
+print(abspath, dname)
 os.chdir(dname)
 
 token = configparser.ConfigParser()
@@ -279,7 +280,7 @@ class autoSetDaemon(Daemon):
         sensor_data = self.get_sensor_data()
         motion = [x[7] for x in sensor_data[:20]]
         print(motion)
-        self.P_occupancy = min((motion.count(1)+5) / len(motion), 1) # skew the count
+        self.P_occupancy = min((motion.count(1)**3) / len(motion), 1) # skew the count. the more counts, the more likely they're real
         print("{}% chance there's someone here".format(self.P_occupancy*100))
 
 
@@ -335,6 +336,18 @@ class autoSetDaemon(Daemon):
         cursor.close()
         conn.close()
 
+        
+    def log_data(self):
+        conn = mdb.connect(CONN_PARAMS[0],CONN_PARAMS[1],CONN_PARAMS[2],CONN_PARAMS[3],port=CONN_PARAMS[4])
+        cursor = conn.cursor()
+        
+        cursor.execute("""INSERT SystemLog SET timeStamp=%s, Tthermostat=%s, Toutside='%s', Ttarget='%s', Poccupancy='%s'"""%(str(datetime.datetime.now()), int(self.T_in), int(self.T_out), int(self.target_temp), int(self.P_occupancy)))
+        
+        conn.commit()
+
+        cursor.close()
+        conn.close()
+        
 
     def run(self, wait_time=5, debug=False, plot=False, backup=False):
         """
@@ -365,7 +378,8 @@ class autoSetDaemon(Daemon):
 
                     self.set_thermostats(mode, expTime)
 
-
+                self.log_data()
+                
                 #########################################
                 ##### Check about backups
                 #########################################

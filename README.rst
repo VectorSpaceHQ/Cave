@@ -1,4 +1,4 @@
-An open source, low-cost, Raspberry Pi powered, smart thermostat.
+An open source, low-cost, Raspberry Pi powered, smart thermostat. Caves are generally cooler than nests.
 
 Overview
 =======
@@ -7,11 +7,11 @@ This program's goal is to maximize the amount of time spent in the comfort zone 
 
 Structure
 ========
-This system is composed of a server, one or more thermostats, and optional nodes.
+This system is composed of a server, one or more thermostats, and optional nodes. Their purposes and interactions are as follows,
 
 Server
 -------
-The server hosts the MySQL database and the web interface. Its purpose is to collect and analyze the sensor data from the thermostat and any additional nodes, and use that information to direct the thermostat(s). In essence, the server is smart. The server can be a dedicated computer or it can run on the Raspberry Pi, alongside the thermostat program.
+The server hosts the MySQL database and the web interface. Its purpose is to collect and analyze the sensor data from the thermostat(s) and any additional nodes, and use that information to direct the thermostat(s). In essence, the server is smart. The server can be a dedicated computer or it can run on the Raspberry Pi, alongside the thermostat program.
 
 Thermostat
 -------------
@@ -19,7 +19,7 @@ The thermostat measures temperature and directly interfaces with the wiring of t
 
 Nodes
 ------
-Nodes are optional pieces of hardware that provide additional sensor data to the MySQL database such as temperatures, humidity, and motion.
+Nodes are optional pieces of hardware that provide additional sensor data to the MySQL database such as temperatures, humidity, and motion. Nodes might be of value in large spaces or in rooms isolated from the thermostat.
 
 Nodes publish data using the MQTT protocol. This is done rather than modifying the MySQL database directly, simply because these nodes are small and rarely support SQL, as in the case of the ESP8266. The RPi subscribes to the MQTT channel and inserts the data it receives into the SQL database.
 
@@ -28,7 +28,7 @@ Installation
 ===========
 clone the repository to the server and thermostat(s).
 ::
-   git clone https://github.com/VectorSpaceHQ/RPiThermostat
+   git clone https://github.com/VectorSpaceHQ/Cave
 
 Server
 -------
@@ -116,7 +116,7 @@ timeStamp, moduleID, targetTemp, targetMode, expiryTime, entryNo
 SystemLog
 -----------
 This table logs the state of the entire system.
-timeStamp, Tin, Tout, Poccupancy
+timeStamp, Tthermostat, Toutside, Ttarget, Poccupancy
 
 
 Testing
