@@ -14,7 +14,11 @@ dname = os.path.dirname(abspath)
 os.chdir(dname)
 
 token = configparser.ConfigParser()
+<<<<<<< HEAD
 token.read(dname+"/../thermostat/token.txt")
+=======
+token.read(dname+"../thermostat/token.txt")
+>>>>>>> 33aeb90594160047f968298aff1db9bf2e9434bf
 
 CONN_PARAMS = (token.get('main','mysqlHost'), token.get('main','mysqlUser'),
         token.get('main','mysqlPass'), token.get('main','mysqlDatabase'),
@@ -110,7 +114,6 @@ def main():
     ax3.xaxis.set_major_formatter(mdates.DateFormatter("%m-%d-%y %H:%m"))
     ax4.xaxis.set_major_formatter(mdates.DateFormatter("%m-%d-%y %H:%m"))
 
-    # plt.gcf().autofmt_xdate()
     ax1.grid(True)
     ax2.grid(True)
     ax3.grid(True)

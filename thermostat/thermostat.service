@@ -1,0 +1,10 @@
+[Unit]
+Description=Cave Thermostat
+After=network.target
+
+[Service]
+ExecStart=/home/pi/Cave/thermostat/thermostat.py start
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target

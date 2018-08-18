@@ -38,12 +38,7 @@ CONN_PARAMS = (token.get('main','mysqlHost'), token.get('main','mysqlUser'),
 config = configparser.ConfigParser()
 config.read(dname+"/server.conf")
 
-# T_MIN = float(config.get('main', 'Minimum_Temperature'))
-# T_MAX = float(config.get('main', 'Maximum_Temperature'))
-T_MIN=50
-T_MAX=80
 comfort_offset = float(config.get('main', 'comfort_offset'))
-comfort_zone = [T_MIN, T_MAX]
 
 MYSQL_BACKUP_DIR = config.get('main','mysqlBackupDir')
 
@@ -69,7 +64,6 @@ def on_message(client, userdata, msg):
     conDB.close()
 
 class autoSetDaemon(Daemon):
-
     def init_therm_set(self):
         """
         Initialize the thermostatSet table in the MySQL database.
@@ -280,8 +274,8 @@ class autoSetDaemon(Daemon):
         sensor_data = self.get_sensor_data()
         motion = [x[7] for x in sensor_data[:20]]
         print(motion)
-        self.P_occupancy = min((motion.count(1)**3) / len(motion), 1) # skew the count. the more counts, the more likely they're real
-        print("{}% chance there's someone here".format(self.P_occupancy*100))
+        self.P_occupancy = 100 * min((motion.count(1)**3) / len(motion), 1) # skew the count. the more counts, the more likely they're real
+        print("{}% chance there's someone here".format(self.P_occupancy))
 
 
     def pred_future_occupancy(self):
@@ -300,24 +294,31 @@ class autoSetDaemon(Daemon):
         T_min = self.comfort_zone[0]
         T_max = self.comfort_zone[1]
 
+        # if self.mode == 'idle':
+        #     self.T_in < T_min - inactive_hysteresis
+
+
+            
         if self.T_in < T_min:
+            self.target_temp = T_min
             if self.T_out > T_min:
                 mode = 'idle'
                 print("Outside temperature is in your comfort zone. Open the windows!")
             else:
                 mode = 'heat'
-                self.target_temp = T_min
         elif self.T_in > T_max:
+            self.target_temp = T_max
             if self.T_out < T_max:
                 mode = 'idle'
                 print("The inside temperature is above your comfort zone and the outside temperature is below. Open the windows!")
             else:
                mode = 'cool'
-               self.target_temp = T_max
         else:
             print("Temperature is in your comfort zone.")
             print(self.T_in)
             mode = 'idle'
+
+        self.mode = mode
 
         return mode
 
@@ -378,7 +379,7 @@ class autoSetDaemon(Daemon):
 
                     self.set_thermostats(mode, expTime)
 
-                self.log_data()
+                # self.log_data();
                 
                 #########################################
                 ##### Check about backups
@@ -432,7 +433,7 @@ if __name__ == "__main__":
         elif 'restart' == sys.argv[1]:
             daemon.restart()
         elif 'debug' == sys.argv[1]:
-            logging.basicConfig(filename='server.log',level=logging.DEBUG)
+            logging.basicConfig(filename=dname+'/server.log',level=logging.DEBUG)
             daemon.run(True)
         else:
             print("Unknown command")
