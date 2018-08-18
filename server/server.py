@@ -38,12 +38,7 @@ CONN_PARAMS = (token.get('main','mysqlHost'), token.get('main','mysqlUser'),
 config = configparser.ConfigParser()
 config.read(dname+"/server.conf")
 
-# T_MIN = float(config.get('main', 'Minimum_Temperature'))
-# T_MAX = float(config.get('main', 'Maximum_Temperature'))
-T_MIN=50
-T_MAX=80
 comfort_offset = float(config.get('main', 'comfort_offset'))
-comfort_zone = [T_MIN, T_MAX]
 
 MYSQL_BACKUP_DIR = config.get('main','mysqlBackupDir')
 
@@ -69,7 +64,6 @@ def on_message(client, userdata, msg):
     conDB.close()
 
 class autoSetDaemon(Daemon):
-
     def init_therm_set(self):
         """
         Initialize the thermostatSet table in the MySQL database.
@@ -306,19 +300,19 @@ class autoSetDaemon(Daemon):
 
             
         if self.T_in < T_min:
+            self.target_temp = T_min
             if self.T_out > T_min:
                 mode = 'idle'
                 print("Outside temperature is in your comfort zone. Open the windows!")
             else:
                 mode = 'heat'
-                self.target_temp = T_min
         elif self.T_in > T_max:
+            self.target_temp = T_max
             if self.T_out < T_max:
                 mode = 'idle'
                 print("The inside temperature is above your comfort zone and the outside temperature is below. Open the windows!")
             else:
                mode = 'cool'
-               self.target_temp = T_max
         else:
             print("Temperature is in your comfort zone.")
             print(self.T_in)
