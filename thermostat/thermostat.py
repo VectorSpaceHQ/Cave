@@ -34,18 +34,15 @@ dname = os.path.dirname(abspath)
 config = configparser.ConfigParser()
 config.read(dname+"/thermostat.conf")
 
-active_hysteresis = float(config.get('main','active_hysteresis'))
-inactive_hysteresis = float(config.get('main','inactive_hysteresis'))
-
-
-ORANGE_PIN = int(config.get('main','ORANGE_PIN'))
-YELLOW_PIN = int(config.get('main','YELLOW_PIN'))
-GREEN_PIN = int(config.get('main','GREEN_PIN'))
-AUX_PIN = int(config.get('main','AUX_PIN'))
-PIR_PIN = int(config.get('main','PIR_PIN'))
-TEMP_PIN = int(config.get('main','TEMP_PIN'))
-
-AUX_ID = int(config.get('main','AUX_ID'))
+active_hysteresis = 1
+inactive_hysteresis = 1.5
+ORANGE_PIN = 6
+YELLOW_PIN = 13
+GREEN_PIN = 19
+AUX_PIN = 26
+PIR_PIN = 20
+TEMP_PIN = 4
+AUX_ID = 1
 
 AUX_TIMER = 10 #minutes
 AUX_THRESH = 0.2 #degrees
@@ -56,9 +53,6 @@ CONN_PARAMS = (config.get('main','mysqlHost'), config.get('main','mysqlUser'),
         config.get('main','mysqlPass'), config.get('main','mysqlDatabase'),
         int(config.get('main','mysqlPort')))
 
-config = configparser.ConfigParser()
-config.read(dname+"/thermostat.conf")
-PIR_PIN = int(config.get('main', 'PIR_PIN'))
 
 
 class thermDaemon(Daemon):
