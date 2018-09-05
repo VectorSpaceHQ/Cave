@@ -1,40 +1,70 @@
 #!/usr/bin/env python3
 # coding: utf-8
+
 import database
 import error
+import subprocess
+import RPi.GPIO as GPIO
+
+GPIO.setmode(GPIO.BCM)
+
 
 class thermostat():
     def __init__(self):
-        TEMP_PIN = 4
-        STATUS_LED = 17
-        active_hysteresis = 1
-        inactive_hysteresis = 1.5
+        comfort_offset = 1 # additional offset on top of ASHREA
+        PIR_PIN = 20
+        
+        self.STATUS_LED = 17
+        self.target_state = "idle"
+        self.active_hysteresis = 1
+        self.inactive_hysteresis = 1.5
+        self.last_action = 0
+        self.motion = 0
+        self.comfort_zone = [71 - comfort_offset,
+                             76.5 + comfort_offset]
 
+        GPIO.add_event_detect(PIR_PIN, GPIO.RISING,
+                              callback=self.get_motion)
+
+        
     def run(self):
+        server = database.Server()
+        hvac_unit = hvac.HVAC()
+        
         while True:
+            self.heartbeat()
             
-            time_since_action = time.time() - self.last_action
-            
-            if time_since_action > 60: # 60 seconds
-                self.heartbeat()
-                self.read_sensors()
+            if (time.time() - self.last_action) > 60: # 60 seconds
+                self.get_temperature()
         
-                server = database.Server()
-                
                 if server.connected:
-                    self.store_sensors()
-                    target_state = self.get_targets()
+                    server.store_sensors(self.motion, self.temperature)
+                    server.get_targets()
+                    self.motion = 0
                 else:
-                    target_state = self.fallback_mode()
-        
-                self.set_state(target_state)
-        
+                    self.heartbeat()
+                    self.fallback_mode()
 
-    def read_sensors(self):
-        self.get_motion()
-        self.get_temperature()
+                hvac_unit.set_state(self.target_state)
 
-        
+
+    def fallback_mode(self):
+        T_min = self.comfort_zone[0]
+        T_max = self.comfort_zone[1]
+
+        if hvac_unit.get_state == "idle"
+            if self.temperature < (T_min - self.inactive_hysteresis):
+                self.target_state = "heat"
+            if self.temperature < (T_max + self.inactive_hysteresis):
+                self.target_state = "cool"
+
+        else: # Active
+            if self.temperature > (T_max + active_hysteresis):
+                self.target_state = "idle"
+            elif self.temperature < (T_min - active_hysteresis):
+                self.target_state = "idle"
+                
+
     def get_temperature():
         """
         Return temperature from a ds18b20 sensor.
@@ -62,28 +92,23 @@ class thermostat():
         self.temperature = temp_f
     
 
-    def store_sensors(self):
-        pass
-        
     def get_motion(self):
-        PIR_PIN = 20
-        print("MOVEMENT DETECTED")
-        self.occupied = 1
+        """
+        Callback function for PIR sensor
+        """
         self.motion = 1
-        self.last_movement = time.time()
+        
 
-    def get_targets(self):
-        pass
+    def set_state(self, target_state):
+        hvac.setState(target_state)
+
     
-    def set_state(self):
-        self.last_action = time.time()
-
-
-    def set_mode(self):
-        pass
-
     def heartbeat(self):
-        pass
+        if GPIO.input(self.STATUS_LED) == True:
+            GPIO.output(self.STATUS_LED, False)
+        else:
+            GPIO.output(self.STATUS_LED, True)
+
 
     def log_status(self):
         pass

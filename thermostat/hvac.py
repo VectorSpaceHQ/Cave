@@ -1,20 +1,25 @@
-import time
+#!/usr/bin/env python3
+# coding: utf-8
 
-class hvac():
+import time
+import RPi.GPIO as GPIO
+
+GPIO.setmode(GPIO.BCM)
+
+
+class HVAC():
     def __init__(self):
+        self.SAFETY_TIMER = 600 # minimum time between state changes, protects compressor
         self.state = "none"
         self.last_state_change = 0
         
         self.getState()
         
 
-    def getState(self):
+    def get_state(self):
         """
         Look at pin states in order to determine hvac state.
         """
-        import RPi.GPIO as GPIO
-        GPIO.setmode(GPIO.BCM)
-
         ORANGEPIN = 6
         YELLOWPIN = 13
         GREEN_PIN = 19
@@ -24,8 +29,6 @@ class hvac():
         yellowStatus = GPIO.input(YELLOW_PIN)
         greenStatus = GPIO.input(GREEN_PIN)
         auxStatus = GPIO.input(AUX_PIN)
-
-        old_state = self.state
 
         if orangeStatus == 1 and yellowStatus == 1 and greenStatus == 1 and auxStatus == 0:
             self.state = "cool"
@@ -46,5 +49,41 @@ class hvac():
             self.state = "broken"
 
 
-        if old_state <> self.state:
+    def set_state(self, target_state):
+        
+        self.state = target_state
+        
+        if time.time() - self.last_state_change > self.SAFETY_TIMER:
+            
             self.last_state_change = time.time()
+            
+            if self.state == "cool":
+                GPIO.output(ORANGE_PIN, True)
+                GPIO.output(YELLOW_PIN, True)
+                GPIO.output(GREEN_PIN, True)
+                GPIO.output(AUX_PIN, False)
+            elif self.state == "heat":
+                GPIO.output(ORANGE_PIN, False)
+                GPIO.output(YELLOW_PIN, True)
+                GPIO.output(GREEN_PIN, True)
+                GPIO.output(AUX_PIN, False)
+            elif self.state == "fan":
+                GPIO.output(ORANGE_PIN, False)
+                GPIO.output(YELLOW_PIN, False)
+                GPIO.output(GREEN_PIN, True)
+                GPIO.output(AUX_PIN, False)
+            elif self.state == "aux":
+                GPIO.output(ORANGE_PIN, False)
+                GPIO.output(YELLOW_PIN, True)
+                GPIO.output(GREEN_PIN, True)
+                GPIO.output(AUX_PIN, True)
+            elif self.state == "idle":
+                GPIO.output(ORANGE_PIN, False)
+                GPIO.output(YELLOW_PIN, False)
+                GPIO.output(GREEN_PIN, False)
+                GPIO.output(AUX_PIN, False)
+            else:
+                GPIO.output(ORANGE_PIN, False)
+                GPIO.output(YELLOW_PIN, False)
+                GPIO.output(GREEN_PIN, False)
+                GPIO.output(AUX_PIN, False)
