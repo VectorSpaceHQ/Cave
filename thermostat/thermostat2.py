@@ -28,7 +28,7 @@ class thermostat():
 
         
     def run(self):
-        server = database.Server()
+        db = database.Database()
         hvac_unit = hvac.HVAC()
         
         while True:
@@ -37,9 +37,9 @@ class thermostat():
             if (time.time() - self.last_action) > 60: # 60 seconds
                 self.get_temperature()
         
-                if server.connected:
-                    server.store_sensors(self.motion, self.temperature)
-                    server.get_targets()
+                if db.connected:
+                    db.store_sensors(self.motion, self.temperature)
+                    db.get_targets()
                     self.motion = 0
                 else:
                     self.heartbeat()

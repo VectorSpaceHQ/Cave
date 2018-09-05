@@ -16,6 +16,7 @@ class HVAC():
         self.getState()
         
 
+        
     def get_state(self):
         """
         Look at pin states in order to determine hvac state.
