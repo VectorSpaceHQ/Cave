@@ -78,6 +78,15 @@ def pred_future_occupancy():
 
 
 
+    df = pd.DataFrame(data = {"Time":times, "Value":occ_probabilities})
+    df.set_index('Time', inplace=True)
+    df = df.groupby([df.index.hour]).mean()
+        
+    print(df)
+          
+
+
+
     # times = [x[0] for x in data]
     # occ_probabilities = [x[4] for x in data]
 
@@ -92,6 +101,7 @@ def pred_future_occupancy():
     
     # print(df)
     # sys.exit()
+
     
     # df_group = df.groupby(pd.TimeGrouper(level='Time', freq='Min'))['Value'].agg('mean')
     # df_group.dropna(inplace=True)
