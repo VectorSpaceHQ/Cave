@@ -2,11 +2,14 @@
 # coding: utf-8
 
 import database
+import hvac
 import error
+
 import subprocess
 import RPi.GPIO as GPIO
 import time
 import datetime
+import glob
 
 GPIO.setmode(GPIO.BCM)
 
@@ -25,20 +28,26 @@ class Thermostat():
         self.last_action = 0
         self.motion = 0
         self.movement_timeout = 600
+        self.last_movement = 0
         self.comfort_zone = [71 - comfort_offset,
                              76.5 + comfort_offset]
 
+        GPIO.setup(self.STATUS_LED, GPIO.OUT)
+        GPIO.setup(PIR_PIN, GPIO.IN)
         GPIO.add_event_detect(PIR_PIN, GPIO.RISING,
                               callback=self.get_motion)
 
         
     def run(self):
+        print("initializing db")
         db = database.Database()
-        hvac_unit = hvac.HVAC()
+        print("initializing hvac")
+        self.hvac_unit = hvac.HVAC()
         
         while True:
             self.heartbeat()
-            
+
+            print(self.last_action)
             if (time.time() - self.last_action) > 60: # 60 seconds
                 self.reset_sensors()
                 self.get_temperature()
@@ -51,36 +60,40 @@ class Thermostat():
                     self.heartbeat()
                     self.fallback_mode()
 
-                # hvac_unit.set_state(self.target_state)
+                # self.hvac_unit.set_state(self.target_state)
                 
                 self.log_status()
 
 
     def fallback_mode(self):
+        print("Entering Fallback mode")
+        print(self.hvac_unit.get_state())
+        sys.exit()
+        
         T_min = self.comfort_zone[0]
         T_max = self.comfort_zone[1]
 
-        if hvac_unit.get_state == "idle":
+        if self.hvac_unit.get_state == "idle":
             if self.temperature < (T_min - self.inactive_hysteresis):
                 self.target_state = "heat"
             if self.temperature > (T_max + self.inactive_hysteresis):
                 self.target_state = "cool"
 
         else: # Active
-            if self.temperature < (T_max - active_hysteresis):
+            if self.temperature < (T_max - self.active_hysteresis):
                 self.target_state = "idle"
-            elif self.temperature > (T_min + active_hysteresis):
+            elif self.temperature > (T_min + self.active_hysteresis):
                 self.target_state = "idle"
 
 
-    def reset_sensors():
+    def reset_sensors(self):
         if (time.time() - self.last_movement) > self.movement_timeout:
             print("movement has stopped")
             self.motion = 0
             self.light = 0
 
             
-    def get_temperature():
+    def get_temperature(self):
         """
         Return temperature from a ds18b20 sensor.
         """
@@ -140,6 +153,7 @@ class Thermostat():
 
 
     def heartbeat(self):
+        print("running")
         if GPIO.input(self.STATUS_LED) == True:
             GPIO.output(self.STATUS_LED, False)
         else:

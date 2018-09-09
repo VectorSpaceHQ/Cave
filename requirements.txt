@@ -5,3 +5,4 @@
 # flask-lesscss==0.9.1
 numpy
 pyowm
+fysom

@@ -2,6 +2,9 @@
 # coding: utf-8
 import configparser
 import MySQLdb as mdb
+import time
+import os
+from fysom import FysomGlobalMixin, FysomGlobal
 
 #set working directory to where "server.py" is
 abspath = os.path.abspath(__file__)
@@ -14,17 +17,35 @@ CONN_PARAMS = (config.get('main','mysqlHost'), config.get('main','mysqlUser'),
         config.get('main','mysqlPass'), config.get('main','mysqlDatabase'),
         int(config.get('main','mysqlPort')))
 
-class Database():
+
+class Database(FysomGlobalMixin):
+    GSM = FysomGlobal(
+        events=[('cool', 'idle', 'cool'),
+                ('heat',  'idle', 'heat'),
+                ('fan', 'idle', 'fan'),
+                ('idle', ['cool', 'heat'], 'idle')],
+                initial='idle',
+            )
+    # GSM = FysomGlobal({ 'initial': 'idle',
+    #               'events': [
+    #               {'name': 'cool', 'src': 'idle', 'dst': 'cool'},
+    #               {'name': 'heat', 'src': 'idle', 'dst': 'heat'},
+    #               {'name': 'stop', 'src': ['cool', 'heat'], 'dst': 'idle'},
+    #               {'name': 'circulate', 'src': 'idle', 'dst': 'fan'} ] })
+    
     def __init__(self):
         self.last_update = 0
         self.connected = False
-        self.update()
+        # self.update()
 
         
     def connect(self):
         conn = mdb.connect(CONN_PARAMS[0],CONN_PARAMS[1],CONN_PARAMS[2],
                            CONN_PARAMS[3],port=CONN_PARAMS[4])
         self.cursor = conn.cursor()
+        cursor.close()
+        conDB.commit()
+        conDB.close()
 
         
     def update(self):

@@ -18,8 +18,13 @@ class HVAC():
         self.SAFETY_TIMER = 360 # minimum time between state changes, protects compressor
         self.state = "none"
         self.last_state_change = 0
+
+        GPIO.setup(self.ORANGE_PIN, GPIO.IN)
+        GPIO.setup(self.YELLOW_PIN, GPIO.IN)
+        GPIO.setup(self.GREEN_PIN, GPIO.IN)
+        GPIO.setup(self.AUX_PIN, GPIO.IN)
         
-        self.getState()
+        self.get_state()
 
         
     def get_state(self):
