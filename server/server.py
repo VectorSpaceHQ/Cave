@@ -282,8 +282,24 @@ class autoSetDaemon(Daemon):
         """
         Calculate the probability of future occupancy and use the building heat
         rate to decide how to modify the current comfort zone.
+
+        pull occupancy data from SystemLog
+        create histogram by 30 min intervals
         """
-        pass
+        conn = mdb.connect(CONN_PARAMS[0],CONN_PARAMS[1],CONN_PARAMS[2],CONN_PARAMS[3],port=CONN_PARAMS[4])
+        cursor = conn.cursor()
+        cursor.execute("SELECT * FROM SystemLog")
+        data = cursor.fetchall()
+        cursor.close()
+        conn.close()
+
+        occ_probabilities = [x[4] for x in data]
+        bins = np.linspace(0, 1, 10)
+        bin_means = (np.histogram(occ_probabilities, bins, weights=data)[0] / np.histogram(data, bins)[0])
+        
+        print(data[0])
+        print(bin_means)
+        
 
 
     def mqtt(self):
@@ -345,7 +361,6 @@ class autoSetDaemon(Daemon):
         cursor.execute("""INSERT SystemLog SET timeStamp=%s, Tthermostat=%s, Toutside='%s', Ttarget='%s', Poccupancy='%s'"""%(str(datetime.datetime.now()), int(self.T_in), int(self.T_out), int(self.target_temp), int(self.P_occupancy)))
         
         conn.commit()
-
         cursor.close()
         conn.close()
         
