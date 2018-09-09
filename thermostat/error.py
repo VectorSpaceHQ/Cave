@@ -45,7 +45,6 @@ def check_temp(T):
         e = "Temperature value, {}, is not a number".format(T)
         e += "\nSetting the system to idle mode."
         print(e)
-        thermostat.idle()
         notify_email(e)
         sys.exit()
 
@@ -53,7 +52,6 @@ def check_temp(T):
         e ="Temperature value, {}, is out of bounds. Sensor is likely damaged.".format(T)
         e += "\nSetting the system to idle mode."
         print(e)
-        thermostat.idle()
         notify_email(e)
         sys.exit()
 
