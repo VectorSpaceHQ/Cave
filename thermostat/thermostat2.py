@@ -11,7 +11,7 @@ import datetime
 GPIO.setmode(GPIO.BCM)
 
 
-class thermostat():
+class Thermostat():
     def __init__(self):
         comfort_offset = 1 # additional offset on top of ASHREA
         PIR_PIN = 20
@@ -60,7 +60,7 @@ class thermostat():
         T_min = self.comfort_zone[0]
         T_max = self.comfort_zone[1]
 
-        if hvac_unit.get_state == "idle"
+        if hvac_unit.get_state == "idle":
             if self.temperature < (T_min - self.inactive_hysteresis):
                 self.target_state = "heat"
             if self.temperature > (T_max + self.inactive_hysteresis):
@@ -71,15 +71,15 @@ class thermostat():
                 self.target_state = "idle"
             elif self.temperature > (T_min + active_hysteresis):
                 self.target_state = "idle"
-                
+
 
     def reset_sensors():
         if (time.time() - self.last_movement) > self.movement_timeout:
             print("movement has stopped")
             self.motion = 0
             self.light = 0
-            
 
+            
     def get_temperature():
         """
         Return temperature from a ds18b20 sensor.
@@ -131,14 +131,14 @@ class thermostat():
           count += 1
 
       if count < 100000:
-	  self.light = 1
+          self.light = 1
           self.last_movement = time.time()
-          
+
 
     def set_state(self, target_state):
         hvac.setState(target_state)
 
-    
+
     def heartbeat(self):
         if GPIO.input(self.STATUS_LED) == True:
             GPIO.output(self.STATUS_LED, False)
@@ -150,3 +150,7 @@ class thermostat():
         print("Time: {}, temperature: {}".format(datetime.datetime(), self.temperature))
         print("Target state: {}".format(self.target_state))
         
+
+if __name__ == "__main__":
+    thermostat = Thermostat()
+    thermostat.run()
