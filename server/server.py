@@ -294,6 +294,7 @@ class autoSetDaemon(Daemon):
     def set_mode(self):
         T_min = self.comfort_zone[0]
         T_max = self.comfort_zone[1]
+        T_max = 77
 
         # if self.mode == 'idle':
         #     self.T_in < T_min - inactive_hysteresis

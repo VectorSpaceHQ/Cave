@@ -1,5 +1,6 @@
 [main]
-mysqlHost=10.0.0.89
+#mysqlHost=10.0.0.89
+mysqlHost=localhost
 mysqlUser=root
 mysqlpass=password
 mysqldatabase=hvac

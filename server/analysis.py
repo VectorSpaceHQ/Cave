@@ -73,20 +73,16 @@ def pred_future_occupancy():
 
     df = pd.DataFrame(data = {"Time":times, "Value":occ_probabilities})
     df.set_index('Time', inplace=True)
+    df = df.groupby([df.index.hour]).mean()
+        
     print(df)
-    print(pd.__version__)
-    # Taking mean values for a frequency of 2 minutes
-    # times = pd.to_datetime(df.index)
-    # df.groupby(df.index.map(lambda t: t.minute))
-    df.groupby(df.index.to_periods('T'))
+          
+
     
-    print(df)
-    sys.exit()
-    
-    df_group = df.groupby(pd.TimeGrouper(level='Time', freq='Min'))['Value'].agg('mean')
-    df_group.dropna(inplace=True)
-    df_group = df_group.to_frame().reset_index()
-    print(df_group)
+    # df_group = df.groupby(pd.TimeGrouper(level='Time', freq='Min'))['Value'].agg('mean')
+    # df_group.dropna(inplace=True)
+    # df_group = df_group.to_frame().reset_index()
+    # print(df_group)
     
     # bins = np.linspace(0, 1, 10)
     # digitized = np.digitize(occ_probabilities, bins)

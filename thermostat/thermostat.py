@@ -42,10 +42,13 @@ GREEN_PIN = 19
 AUX_PIN = 26
 PIR_PIN = 20
 TEMP_PIN = 4
+LIGHT_PIN = 21
 AUX_ID = 1
+# green_LED = 21
 
 AUX_TIMER = 10 #minutes
 AUX_THRESH = 0.2 #degrees
+
 
 config = configparser.ConfigParser()
 config.read(dname+"/token.txt")
@@ -54,13 +57,13 @@ CONN_PARAMS = (config.get('main','mysqlHost'), config.get('main','mysqlUser'),
         int(config.get('main','mysqlPort')))
 
 
-
 class thermDaemon(Daemon):
     def init_module_info(self):
         """
         If the ModuleInfo table is empty, this function will populate it with default values.
         This table is required before any other tables can be populated.
         """
+        self.motion = 0
         conn = mdb.connect(CONN_PARAMS[0],CONN_PARAMS[1],CONN_PARAMS[2],
                            CONN_PARAMS[3],port=CONN_PARAMS[4])
         cursor = conn.cursor()
@@ -80,6 +83,27 @@ class thermDaemon(Daemon):
         self.motion = 1
         self.last_movement = time.time()
 
+        
+    def checkLight(self):
+        count = 0
+
+        #Output on the pin for
+        GPIO.setup(LIGHT_PIN, GPIO.OUT)
+        GPIO.output(LIGHT_PIN, GPIO.LOW)
+        time.sleep(0.1)
+        
+        #Change the pin back to input
+        GPIO.setup(LIGHT_PIN, GPIO.IN)
+    
+        #Count until the pin goes high
+        while (GPIO.input(LIGHT_PIN) == GPIO.LOW):
+            count += 1
+    
+        if count < 100000:
+            self.light = 1
+            self.last_movement = time.time()
+
+            
     def configureGPIO(self):
         GPIO.setmode(GPIO.BCM)
         GPIO.setup(ORANGE_PIN, GPIO.OUT)
@@ -87,9 +111,9 @@ class thermDaemon(Daemon):
         GPIO.setup(GREEN_PIN, GPIO.OUT)
         GPIO.setup(AUX_PIN, GPIO.OUT)
 
-        GPIO.setup(red_LED, GPIO.OUT)
-        GPIO.setup(green_LED, GPIO.OUT)
-        GPIO.setup(blue_LED, GPIO.OUT)
+        # GPIO.setup(red_LED, GPIO.OUT)
+        # GPIO.setup(green_LED, GPIO.OUT)
+        # GPIO.setup(blue_LED, GPIO.OUT)
 
         GPIO.setup(PIR_PIN, GPIO.IN)
         GPIO.setup(TEMP_PIN, GPIO.IN)
@@ -143,6 +167,7 @@ class thermDaemon(Daemon):
             return (1, 1, 1, 1)
 
     def cool(self):
+        print("COOLING")
         GPIO.output(ORANGE_PIN, True)
         GPIO.output(YELLOW_PIN, True)
         GPIO.output(GREEN_PIN, True)
@@ -178,7 +203,7 @@ class thermDaemon(Daemon):
         GPIO.output(AUX_PIN, False)
         #delay to preserve compressor
         print('Idling...')
-        time.sleep(360)
+        time.sleep(60)
         return (0, 0, 0, 0)
 
     def off(self):
@@ -272,30 +297,32 @@ class thermDaemon(Daemon):
         Set the HVAC unit to cool, heat, aux heat, or idle. Return the state of the HVAC unit.
         """
         hvacState=self.getHVACState()
+        temp_f = RPiGetTemp.getTemp()
 
-        T_min = comfort_zone[0]
-        T_max = comfort_zone[1]
+        T_min = 68
+        T_max = 79
 
         if hvacState == (0,0,0,0): #idle
-            if tempList[moduleID-1] < (minTemp - inactive_hysteresis):
+            if temp_f < (T_min - inactive_hysteresis):
                 hvacState = self.heat()
-            if tempList[moduleID-1] < (maxTemp + inactive_hysteresis):
+            if temp_f > (T_max + inactive_hysteresis):
                 hvacState = self.cool()
 
         else: # Active
             if auxBool:
                 hvacState = self.aux()
-            elif tempList[moduleID-1] > (maxTemp + active_hysteresis):
+            elif temp_f < (T_max - active_hysteresis):
                 self.fan()
                 time.sleep(30)
                 hvacState = self.idle()
-            elif tempList[moduleID-1] < (minTemp - active_hysteresis):
-                self.fan()
-                time.sleep(30)
-                hvacState = self.idle()
+            # elif temp_f > (T_min + active_hysteresis):
+            #     self.fan()
+            #     time.sleep(30)
+            #     hvacState = self.idle()
+
+        print("setting HVAC state to: " + hvacState)
 
         return hvacState
-
 
 
     def report_sensor_data(self):
@@ -309,10 +336,11 @@ class thermDaemon(Daemon):
         light = "NULL"
 
         temp_f = RPiGetTemp.getTemp()
+        self.temp = temp_f
 
         conDB = mdb.connect(CONN_PARAMS[0],CONN_PARAMS[1],CONN_PARAMS[2],CONN_PARAMS[3],port=CONN_PARAMS[4])
         cursor = conDB.cursor()
-        cursor.execute("INSERT SensorData SET moduleID=1, location='hallway', temperature=%s, motion=%s"%(str(temp_f), int(self.motion)))
+        cursor.execute("INSERT SensorData SET moduleID=1, location='hallway', temperature=%s, motion=%s, light=%s"%(str(temp_f), int(self.motion), self.light))
         cursor.close()
         conDB.commit()
         conDB.close()
@@ -338,10 +366,10 @@ class thermDaemon(Daemon):
 
         while True:
             try:
-                if GPIO.input(green_LED) == 1:
-                    GPIO.output(green_LED, 0)
-                else:
-                    GPIO.output(green_LED, 1)
+                # if GPIO.input(green_LED) == 1:
+                #     GPIO.output(green_LED, 0)
+                # else:
+                #     GPIO.output(green_LED, 1)
                     
                 abspath = os.path.abspath(__file__)
                 dname = os.path.dirname(abspath)
@@ -362,10 +390,13 @@ class thermDaemon(Daemon):
 
                 tempList = self.getTempList()
 
+                self.checkLight()
+
                 if (time.time() - self.last_movement) > movement_timeout:
                     print("movement has stopped")
                     self.occupied = 0
                     self.motion = 0
+                    self.light = 0
 
                 if auxElapsed > AUX_TIMER*60:
 
@@ -392,8 +423,9 @@ class thermDaemon(Daemon):
 
                 # Try to get directive from server. Otherwise operate in fallback mode
                 try:
-                    print("server mode")
+                    print("server mode temporarily disabled")
                     self.server_mode()
+                    # self.fallback_mode()
                 except:
                     msg = "Operating in fallback mode"
                     print(msg)
@@ -417,6 +449,7 @@ class thermDaemon(Daemon):
 
                 logging.debug("error occurred at " + str(datetime.datetime.now()))
                 logging.debug(fname)
+                logging.debug(e)
 
                 GPIO.cleanup()
                 return
