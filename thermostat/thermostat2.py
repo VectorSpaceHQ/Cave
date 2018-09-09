@@ -5,6 +5,8 @@ import database
 import error
 import subprocess
 import RPi.GPIO as GPIO
+import time
+import datetime
 
 GPIO.setmode(GPIO.BCM)
 
@@ -22,6 +24,7 @@ class thermostat():
         self.inactive_hysteresis = 1.5
         self.last_action = 0
         self.motion = 0
+        self.movement_timeout = 600
         self.comfort_zone = [71 - comfort_offset,
                              76.5 + comfort_offset]
 
@@ -37,17 +40,20 @@ class thermostat():
             self.heartbeat()
             
             if (time.time() - self.last_action) > 60: # 60 seconds
+                self.reset_sensors()
                 self.get_temperature()
         
                 if db.connected:
-                    db.store_sensors(self.motion, self.temperature)
+                    db.store_sensors(temp=self.temperature, motion=self.motion, light=self.light)
                     db.get_targets()
                     self.motion = 0
                 else:
                     self.heartbeat()
                     self.fallback_mode()
 
-                hvac_unit.set_state(self.target_state)
+                # hvac_unit.set_state(self.target_state)
+                
+                self.log_status()
 
 
     def fallback_mode(self):
@@ -66,6 +72,13 @@ class thermostat():
             elif self.temperature > (T_min + active_hysteresis):
                 self.target_state = "idle"
                 
+
+    def reset_sensors():
+        if (time.time() - self.last_movement) > self.movement_timeout:
+            print("movement has stopped")
+            self.motion = 0
+            self.light = 0
+            
 
     def get_temperature():
         """
@@ -134,4 +147,6 @@ class thermostat():
 
 
     def log_status(self):
-        pass
+        print("Time: {}, temperature: {}".format(datetime.datetime(), self.temperature))
+        print("Target state: {}".format(self.target_state))
+        
