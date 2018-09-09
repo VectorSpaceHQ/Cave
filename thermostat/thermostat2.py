@@ -13,6 +13,8 @@ class thermostat():
     def __init__(self):
         comfort_offset = 1 # additional offset on top of ASHREA
         PIR_PIN = 20
+        self.LIGHT_PIN = 21
+        self.TEMP_PIN = 4
         
         self.STATUS_LED = 17
         self.target_state = "idle"
@@ -55,13 +57,13 @@ class thermostat():
         if hvac_unit.get_state == "idle"
             if self.temperature < (T_min - self.inactive_hysteresis):
                 self.target_state = "heat"
-            if self.temperature < (T_max + self.inactive_hysteresis):
+            if self.temperature > (T_max + self.inactive_hysteresis):
                 self.target_state = "cool"
 
         else: # Active
-            if self.temperature > (T_max + active_hysteresis):
+            if self.temperature < (T_max - active_hysteresis):
                 self.target_state = "idle"
-            elif self.temperature < (T_min - active_hysteresis):
+            elif self.temperature > (T_min + active_hysteresis):
                 self.target_state = "idle"
                 
 
@@ -97,7 +99,28 @@ class thermostat():
         Callback function for PIR sensor
         """
         self.motion = 1
+        self.last_movement = time.time()
+
         
+    def get_light(self):
+      count = 0
+
+      #Output on the pin for                                                                 
+      GPIO.setup(self.LIGHT_PIN, GPIO.OUT)
+      GPIO.output(self.LIGHT_PIN, GPIO.LOW)
+      time.sleep(0.1)
+
+      #Change the pin back to input                                                          
+      GPIO.setup(self.LIGHT_PIN, GPIO.IN)
+        
+      #Count until the pin goes high                                                         
+      while (GPIO.input(self.LIGHT_PIN) == GPIO.LOW):
+          count += 1
+
+      if count < 100000:
+	  self.light = 1
+          self.last_movement = time.time()
+          
 
     def set_state(self, target_state):
         hvac.setState(target_state)
