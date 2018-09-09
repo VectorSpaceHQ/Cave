@@ -41,14 +41,16 @@ class HVAC(FysomGlobalMixin):
         
     def get_state(self):
         """
-        Look at pin states in order to determine hvac state.
+        Look at pin states in order to determine true hvac state.
+        This is not the software state.
         """
         orangeStatus = GPIO.input(self.ORANGE_PIN)
         yellowStatus = GPIO.input(self.YELLOW_PIN)
         greenStatus = GPIO.input(self.GREEN_PIN)
         auxStatus = GPIO.input(self.AUX_PIN)
 
-        if (orangeStatus == 1 and yellowStatus == 1 and greenStatus == 1 and auxStatus == 0):
+        if (orangeStatus == 1 and yellowStatus == 1 and
+            greenStatus == 1 and auxStatus == 0):
             self.cool()
             
         elif yellowStatus == 1 and greenStatus == 1:
@@ -57,14 +59,18 @@ class HVAC(FysomGlobalMixin):
             else:
                 self.aux()
 
-        elif (orangeStatus == 0 and yellowStatus == 0 and greenStatus == 0 and auxStatus == 0):
+        elif (orangeStatus == 0 and yellowStatus == 0 and
+        greenStatus == 0 and auxStatus == 0):
             self.idle()
 
-        elif (orangeStatus == 0 and yellowStatus == 0 and greenStatus == 1 and auxStatus == 0):
+        elif (orangeStatus == 0 and yellowStatus == 0 and
+        greenStatus == 1 and auxStatus == 0):
             self.fan()
 
         else:
             self.idle()
+
+        return self.current
 
 
     def set_state(self, target_state):
@@ -110,6 +116,6 @@ class HVAC(FysomGlobalMixin):
 if __name__ == "__main__":
     hvac = HVAC()
     hvac.cool()
-    hvac.heat()
-    hvac.stop()
+    hvac.idle()
     print(hvac.current)
+    print(hvac.get_state())
