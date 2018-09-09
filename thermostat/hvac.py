@@ -7,7 +7,7 @@ from fysom import FysomGlobalMixin, FysomGlobal
 
 GPIO.setmode(GPIO.BCM)
 
-last_state_change = time.time()
+last_state_change = 0
 
 
 def ready_for_change(e):

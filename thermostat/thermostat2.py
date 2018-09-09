@@ -14,8 +14,11 @@ import glob
 GPIO.setmode(GPIO.BCM)
 
 
-class Thermostat():
+class Thermostat(hvac.HVAC):
+    
     def __init__(self):
+        super().__init__() # initialize HVAC class
+        
         comfort_offset = 1 # additional offset on top of ASHREA
         PIR_PIN = 20
         self.LIGHT_PIN = 21
@@ -41,14 +44,14 @@ class Thermostat():
     def run(self):
         print("initializing db")
         db = database.Database()
-        print("initializing hvac")
-        self.hvac_unit = hvac.HVAC()
+        # print("initializing hvac")
+        # self.hvac_unit = hvac.HVAC()
         
         while True:
             self.heartbeat()
 
-            print(self.last_action)
             if (time.time() - self.last_action) > 60: # 60 seconds
+                self.last_action = time.time()
                 self.reset_sensors()
                 self.get_temperature()
         
@@ -67,13 +70,11 @@ class Thermostat():
 
     def fallback_mode(self):
         print("Entering Fallback mode")
-        print(self.hvac_unit.get_state())
-        sys.exit()
         
         T_min = self.comfort_zone[0]
         T_max = self.comfort_zone[1]
 
-        if self.hvac_unit.get_state == "idle":
+        if self.current == "idle":
             if self.temperature < (T_min - self.inactive_hysteresis):
                 self.target_state = "heat"
             if self.temperature > (T_max + self.inactive_hysteresis):
@@ -88,7 +89,7 @@ class Thermostat():
 
     def reset_sensors(self):
         if (time.time() - self.last_movement) > self.movement_timeout:
-            print("movement has stopped")
+            self.last_movement = time.time()
             self.motion = 0
             self.light = 0
 
@@ -153,7 +154,6 @@ class Thermostat():
 
 
     def heartbeat(self):
-        print("running")
         if GPIO.input(self.STATUS_LED) == True:
             GPIO.output(self.STATUS_LED, False)
         else:
@@ -161,8 +161,9 @@ class Thermostat():
 
 
     def log_status(self):
-        print("Time: {}, temperature: {}".format(datetime.datetime(), self.temperature))
-        print("Target state: {}".format(self.target_state))
+        print("Time: {}, temperature: {}".format(datetime.datetime.now(), self.temperature))
+        print("Current State: {}, Target state: {}".format(self.current, self.target_state))
+        print(self.get_state())
         
 
 if __name__ == "__main__":
