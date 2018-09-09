@@ -84,6 +84,7 @@ class autoSetDaemon(Daemon):
             entryNo = 1
             cursor.execute("""INSERT ThermostatSet SET moduleID=%s, targetTemp=%s, targetMode='%s', expiryTime='%s', entryNo=1"""%(int(moduleID),int(target_temp),mode,str(expiry_time)))
 
+
         cursor.close()
         conn.commit()
         conn.close()
@@ -358,7 +359,7 @@ class autoSetDaemon(Daemon):
         conn = mdb.connect(CONN_PARAMS[0],CONN_PARAMS[1],CONN_PARAMS[2],CONN_PARAMS[3],port=CONN_PARAMS[4])
         cursor = conn.cursor()
         
-        cursor.execute("""INSERT SystemLog SET timeStamp=%s, Tthermostat=%s, Toutside='%s', Ttarget='%s', Poccupancy='%s'"""%(str(datetime.datetime.now()), int(self.T_in), int(self.T_out), int(self.target_temp), int(self.P_occupancy)))
+        cursor.execute("INSERT SystemLog SET Toutside={}, lowTarget={}, highTarget={}, Poccupancy={}".format(self.T_out, self.comfort_zone[0], self.comfort_zone[1], self.P_occupancy))
         
         conn.commit()
         cursor.close()
@@ -394,7 +395,7 @@ class autoSetDaemon(Daemon):
 
                     self.set_thermostats(mode, expTime)
 
-                # self.log_data();
+                self.log_data()
                 
                 #########################################
                 ##### Check about backups

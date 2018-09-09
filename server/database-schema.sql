@@ -68,7 +68,7 @@ DROP TABLE IF EXISTS `ThermostatLog`;
 CREATE TABLE `ThermostatLog` (
   `timeStamp` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   `moduleID` int(11) unsigned NOT NULL,
-  `targetTemp` int(11) DEFAULT NULL,
+  `targetTemp` float DEFAULT NULL,
   `actualTemp` float DEFAULT NULL,
   `coolOn` tinyint(1) NOT NULL,
   `heatOn` tinyint(1) NOT NULL,
@@ -90,7 +90,7 @@ DROP TABLE IF EXISTS `ThermostatSet`;
 CREATE TABLE `ThermostatSet` (
   `timeStamp` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   `moduleID` int(11) unsigned NOT NULL,
-  `targetTemp` int(11) NOT NULL,
+  `targetTemp` float NOT NULL,
   `targetMode` varchar(45) NOT NULL,
   `expiryTime` datetime NOT NULL,
   `entryNo` int(11) NOT NULL AUTO_INCREMENT,
@@ -108,6 +108,18 @@ CREATE TABLE `ThermostatSet` (
 /*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
+
+
+CREATE TABLE `SystemLog` (
+  `timeStamp` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `Toutside` float DEFAULT NULL,
+  `lowTarget` float DEFAULT NULL,
+  `highTarget` float DEFAULT NULL,
+  `Poccupancy` int DEFAULT NULL,
+  PRIMARY KEY (`timeStamp`)
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+
+
 
 INSERT INTO `hvac`.`ModuleInfo` (`moduleID`, `strDescription`, `firmwareVer`, `tempSense`, `humiditySense`, `lightSense`, `motionSense`) VALUES ('1', 'RPI thermostat 1', '1', '1', '0', '1', '1');
 

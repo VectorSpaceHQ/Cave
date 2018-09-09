@@ -1,5 +1,23 @@
 #!/usr/bin/env python3
 # coding: utf-8
+import configparser
+import MySQLdb as mdb
+import numpy as np
+import os
+import datetime
+import pandas as pd
+
+    
+abspath = os.path.abspath(__file__)
+dname = os.path.dirname(abspath)
+print(abspath, dname)
+os.chdir(dname)
+token = configparser.ConfigParser()
+token.read(dname+"/token.txt")
+
+CONN_PARAMS = (token.get('main','mysqlHost'), token.get('main','mysqlUser'),
+               token.get('main','mysqlPass'), token.get('main','mysqlDatabase'),
+               int(token.get('main','mysqlPort')))
 
 
 def integrated_hrs(start, end):
@@ -58,6 +76,35 @@ def pred_future_occupancy():
     print(data[0])
     print(bin_means)
 
+
+
+    # times = [x[0] for x in data]
+    # occ_probabilities = [x[4] for x in data]
+
+    # df = pd.DataFrame(data = {"Time":times, "Value":occ_probabilities})
+    # df.set_index('Time', inplace=True)
+    # print(df)
+    # print(pd.__version__)
+    # # Taking mean values for a frequency of 2 minutes
+    # # times = pd.to_datetime(df.index)
+    # # df.groupby(df.index.map(lambda t: t.minute))
+    # df.groupby(df.index.to_periods('T'))
+    
+    # print(df)
+    # sys.exit()
+    
+    # df_group = df.groupby(pd.TimeGrouper(level='Time', freq='Min'))['Value'].agg('mean')
+    # df_group.dropna(inplace=True)
+    # df_group = df_group.to_frame().reset_index()
+    # print(df_group)
+    
+    # # bins = np.linspace(0, 1, 10)
+    # # digitized = np.digitize(occ_probabilities, bins)
+    # # bin_means = [occ_probabilities[digitized == i].mean() for i in range(1, len(bins))]
+    # # # bin_means = (np.histogram(occ_probabilities, bins, weights=data)[0] / np.histogram(occ_probabilities, bins)[0])
+    # # print(digitized)
+    # # print(bin_means)
+    # sys.exit()
 
     
 pred_future_occupancy()
