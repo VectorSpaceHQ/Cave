@@ -3,6 +3,11 @@
 import configparser
 import MySQLdb as mdb
 
+#set working directory to where "server.py" is
+abspath = os.path.abspath(__file__)
+dname = os.path.dirname(abspath)
+os.chdir(dname)
+
 config = configparser.ConfigParser()
 config.read(dname+"/token.txt")
 CONN_PARAMS = (config.get('main','mysqlHost'), config.get('main','mysqlUser'),
