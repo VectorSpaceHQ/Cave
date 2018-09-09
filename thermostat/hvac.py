@@ -7,21 +7,36 @@ from fysom import FysomGlobalMixin, FysomGlobal
 
 GPIO.setmode(GPIO.BCM)
 
+last_state_change = time.time()
 
+
+def ready_for_change(e):
+    """
+    Prevent cycling of the compressor by applying a minimum
+    time to wait between state changes.
+    """
+    SAFETY_TIMER = 20
+    if (time.time() - last_state_change) > SAFETY_TIMER:
+        return True
+    else:
+        print("{} seconds until state change allowed".format(
+            round(SAFETY_TIMER - (time.time() - last_state_change))))
+        return False
+
+
+    
 class HVAC(FysomGlobalMixin):
     GSM = FysomGlobal(
         events=[('cool', 'idle', 'cool'),
                 ('heat',  'idle', 'heat'),
                 ('fan', 'idle', 'fan'),
                 ('idle', ['idle', 'cool', 'heat'], 'idle')],
+        callbacks={'on_before_idle': ready_for_change},
         initial='idle',
-        state_field='state'
+        state_field='state',
     )
         
     def __init__(self):
-        self.state = 'idle'
-        super(HVAC, self).__init__() 
-        
         # pin assignments
         self.ORANGE_PIN = 6
         self.YELLOW_PIN = 13
@@ -36,7 +51,15 @@ class HVAC(FysomGlobalMixin):
         GPIO.setup(self.GREEN_PIN, GPIO.IN)
         GPIO.setup(self.AUX_PIN, GPIO.IN)
 
+        self.state = 'idle'
         self.get_state()
+        super(HVAC, self).__init__()
+        self.onchangestate = self.printstatechange
+
+
+    def printstatechange(self, e):
+        print('change event: {}, src: {}, dst: {}'.format(e.event, e.src, e.dst))
+        last_state_change = time.time()
 
         
     def get_state(self):
@@ -113,9 +136,18 @@ class HVAC(FysomGlobalMixin):
                 GPIO.output(self.AUX_PIN, False)
 
 
-if __name__ == "__main__":
+
+
+def test():
     hvac = HVAC()
+    print(hvac.current)
     hvac.cool()
+    print(hvac.current)
     hvac.idle()
     print(hvac.current)
-    print(hvac.get_state())
+
+    print("physical hvac state: {}".format(hvac.get_state()))    
+
+    
+if __name__ == "__main__":
+    test()
