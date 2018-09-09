@@ -24,8 +24,9 @@ class Database(FysomGlobalMixin):
                 ('heat',  'idle', 'heat'),
                 ('fan', 'idle', 'fan'),
                 ('idle', ['cool', 'heat'], 'idle')],
-                initial='idle',
-            )
+        initial='idle',
+        state_field='state'
+    )
     # GSM = FysomGlobal({ 'initial': 'idle',
     #               'events': [
     #               {'name': 'cool', 'src': 'idle', 'dst': 'cool'},
@@ -68,3 +69,9 @@ class Database(FysomGlobalMixin):
         cursor.close()
         conDB.commit()
         conDB.close()
+
+if __name__ == "__main__":
+    db = Database()
+    print(db.current)
+    
+            
