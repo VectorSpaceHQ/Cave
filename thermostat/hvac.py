@@ -46,10 +46,7 @@ class HVAC(FysomGlobalMixin):
         self.SAFETY_TIMER = 360 # minimum time between state changes, protects compressor
         self.last_state_change = 0
 
-        GPIO.setup(self.ORANGE_PIN, GPIO.IN)
-        GPIO.setup(self.YELLOW_PIN, GPIO.IN)
-        GPIO.setup(self.GREEN_PIN, GPIO.IN)
-        GPIO.setup(self.AUX_PIN, GPIO.IN)
+
 
         self.state = 'idle'
         self.get_state()
@@ -67,6 +64,11 @@ class HVAC(FysomGlobalMixin):
         Look at pin states in order to determine true hvac state.
         This is not the software state.
         """
+        GPIO.setup(self.ORANGE_PIN, GPIO.IN)
+        GPIO.setup(self.YELLOW_PIN, GPIO.IN)
+        GPIO.setup(self.GREEN_PIN, GPIO.IN)
+        GPIO.setup(self.AUX_PIN, GPIO.IN)
+        
         orangeStatus = GPIO.input(self.ORANGE_PIN)
         yellowStatus = GPIO.input(self.YELLOW_PIN)
         greenStatus = GPIO.input(self.GREEN_PIN)
@@ -97,6 +99,10 @@ class HVAC(FysomGlobalMixin):
 
 
     def set_state(self, target_state):
+        GPIO.setup(self.ORANGE_PIN, GPIO.OUT)
+        GPIO.setup(self.YELLOW_PIN, GPIO.OUT)
+        GPIO.setup(self.GREEN_PIN, GPIO.OUT)
+        GPIO.setup(self.AUX_PIN, GPIO.OUT)
         
         self.state = target_state
         

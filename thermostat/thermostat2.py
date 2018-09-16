@@ -63,7 +63,7 @@ class Thermostat(hvac.HVAC):
                     self.heartbeat()
                     self.fallback_mode()
 
-                # self.hvac_unit.set_state(self.target_state)
+                self.set_state(self.target_state)
                 
                 self.log_status()
 
@@ -119,6 +119,7 @@ class Thermostat(hvac.HVAC):
             error.check_temp(temp_f)
 
         self.temperature = temp_f
+        return temp_f
     
 
     def get_motion(self):
@@ -149,8 +150,8 @@ class Thermostat(hvac.HVAC):
           self.last_movement = time.time()
 
 
-    def set_state(self, target_state):
-        hvac.setState(target_state)
+    # def set_state(self, target_state):
+    #     hvac.setState(target_state)
 
 
     def heartbeat(self):
@@ -168,4 +169,5 @@ class Thermostat(hvac.HVAC):
 
 if __name__ == "__main__":
     thermostat = Thermostat()
+    # print(thermostat.get_temperature())
     thermostat.run()
