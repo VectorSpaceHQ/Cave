@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
 # coding: utf-8
 import configparser
-import MySQLdb as mdb
+# import MySQLdb as mdb
 import time
 import os
-from fysom import FysomGlobalMixin, FysomGlobal
+from peewee import *
+
 
 #set working directory to where "server.py" is
 abspath = os.path.abspath(__file__)
@@ -18,6 +19,13 @@ CONN_PARAMS = (config.get('main','mysqlHost'), config.get('main','mysqlUser'),
         int(config.get('main','mysqlPort')))
 
 
+class Sensor(Model):
+    ID = CharField()
+
+    class Meta:
+        database = db
+
+
 class Database():
 
 
@@ -25,12 +33,11 @@ class Database():
         self.last_update = 0
         self.connected = False
         # self.update()
+        self.conn = mdb.connect(CONN_PARAMS[0],CONN_PARAMS[1],CONN_PARAMS[2],CONN_PARAMS[3],port=CONN_PARAMS[4])
 
         
     def connect(self):
-        conn = mdb.connect(CONN_PARAMS[0],CONN_PARAMS[1],CONN_PARAMS[2],
-                           CONN_PARAMS[3],port=CONN_PARAMS[4])
-        self.cursor = conn.cursor()
+        cursor = self.conn.cursor()
         cursor.close()
         conDB.commit()
         conDB.close()
@@ -81,7 +88,7 @@ class Database():
 
 
 if __name__ == "__main__":
-    db = Database()
-    print(db.current)
+    db = SqliteDatabase('hvac.db')
+    
     
             
