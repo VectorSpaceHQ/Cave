@@ -17,6 +17,7 @@ def ready_for_change(e):
     """
     SAFETY_TIMER = 20
     if (time.time() - last_state_change) > SAFETY_TIMER:
+        print("Changing State")
         return True
     else:
         print("{} seconds until state change allowed".format(
@@ -43,13 +44,12 @@ class HVAC(FysomGlobalMixin):
         self.GREEN_PIN = 19
         self.AUX_PIN = 26
         
-        self.SAFETY_TIMER = 360 # minimum time between state changes, protects compressor
+        self.SAFETY_TIMER = 30 # minimum time between state changes, protects compressor
         self.last_state_change = 0
 
 
 
         self.state = 'idle'
-        self.get_state()
         super(HVAC, self).__init__()
         self.onchangestate = self.printstatechange
 
@@ -59,45 +59,6 @@ class HVAC(FysomGlobalMixin):
         last_state_change = time.time()
 
         
-    def get_state(self):
-        """
-        Look at pin states in order to determine true hvac state.
-        This is not the software state.
-        """
-        GPIO.setup(self.ORANGE_PIN, GPIO.IN)
-        GPIO.setup(self.YELLOW_PIN, GPIO.IN)
-        GPIO.setup(self.GREEN_PIN, GPIO.IN)
-        GPIO.setup(self.AUX_PIN, GPIO.IN)
-        
-        orangeStatus = GPIO.input(self.ORANGE_PIN)
-        yellowStatus = GPIO.input(self.YELLOW_PIN)
-        greenStatus = GPIO.input(self.GREEN_PIN)
-        auxStatus = GPIO.input(self.AUX_PIN)
-
-        if (orangeStatus == 1 and yellowStatus == 1 and
-            greenStatus == 1 and auxStatus == 0):
-            self.cool()
-            
-        elif yellowStatus == 1 and greenStatus == 1:
-            if auxStatus == 0:
-                self.heat()
-            else:
-                self.aux()
-
-        elif (orangeStatus == 0 and yellowStatus == 0 and
-        greenStatus == 0 and auxStatus == 0):
-            self.idle()
-
-        elif (orangeStatus == 0 and yellowStatus == 0 and
-        greenStatus == 1 and auxStatus == 0):
-            self.fan()
-
-        else:
-            self.idle()
-
-        return self.current
-
-
     def set_state(self, target_state):
         GPIO.setup(self.ORANGE_PIN, GPIO.OUT)
         GPIO.setup(self.YELLOW_PIN, GPIO.OUT)
@@ -105,12 +66,16 @@ class HVAC(FysomGlobalMixin):
         GPIO.setup(self.AUX_PIN, GPIO.OUT)
         
         self.state = target_state
-        
+
+        print(time.time(), self.last_state_change, self.SAFETY_TIMER)
         if (time.time() - self.last_state_change) > self.SAFETY_TIMER:
             
             self.last_state_change = time.time()
+
+            print(self.current)
             
             if self.is_state("cool"):
+                print("COOLING")
                 GPIO.output(self.ORANGE_PIN, True)
                 GPIO.output(self.YELLOW_PIN, True)
                 GPIO.output(self.GREEN_PIN, True)
@@ -140,7 +105,6 @@ class HVAC(FysomGlobalMixin):
                 GPIO.output(self.YELLOW_PIN, False)
                 GPIO.output(self.GREEN_PIN, False)
                 GPIO.output(self.AUX_PIN, False)
-
 
 
 

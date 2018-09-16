@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # coding: utf-8
 import configparser
-# import MySQLdb as mdb
+import MySQLdb as mdb
 import time
 import os
 from peewee import *
@@ -19,11 +19,11 @@ CONN_PARAMS = (config.get('main','mysqlHost'), config.get('main','mysqlUser'),
         int(config.get('main','mysqlPort')))
 
 
-class Sensor(Model):
-    ID = CharField()
+# class Sensor(Model):
+#     ID = CharField()
 
-    class Meta:
-        database = db
+#     class Meta:
+#         database = db
 
 
 class Database():
@@ -33,7 +33,7 @@ class Database():
         self.last_update = 0
         self.connected = False
         # self.update()
-        self.conn = mdb.connect(CONN_PARAMS[0],CONN_PARAMS[1],CONN_PARAMS[2],CONN_PARAMS[3],port=CONN_PARAMS[4])
+        # self.conn = mdb.connect(CONN_PARAMS[0],CONN_PARAMS[1],CONN_PARAMS[2],CONN_PARAMS[3],port=CONN_PARAMS[4])
 
         
     def connect(self):

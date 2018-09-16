@@ -26,8 +26,8 @@ class Thermostat(hvac.HVAC):
         
         self.STATUS_LED = 17
         self.target_state = "idle"
-        self.active_hysteresis = 1
-        self.inactive_hysteresis = 1.5
+        self.active_hysteresis = 1.5
+        self.inactive_hysteresis = 1.0
         self.last_action = 0
         self.motion = 0
         self.movement_timeout = 600
@@ -73,6 +73,8 @@ class Thermostat(hvac.HVAC):
         
         T_min = self.comfort_zone[0]
         T_max = self.comfort_zone[1]
+
+        print(self.current, T_max, self.temperature)
 
         if self.current == "idle":
             if self.temperature < (T_min - self.inactive_hysteresis):
@@ -122,7 +124,7 @@ class Thermostat(hvac.HVAC):
         return temp_f
     
 
-    def get_motion(self):
+    def get_motion(self, PIR_PIN):
         """
         Callback function for PIR sensor
         """
@@ -164,7 +166,6 @@ class Thermostat(hvac.HVAC):
     def log_status(self):
         print("Time: {}, temperature: {}".format(datetime.datetime.now(), self.temperature))
         print("Current State: {}, Target state: {}".format(self.current, self.target_state))
-        print(self.get_state())
         
 
 if __name__ == "__main__":
