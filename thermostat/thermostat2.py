@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # coding: utf-8
 
-import database
+from database import *
 import hvac
 import error
 
@@ -13,17 +13,21 @@ import glob
 
 GPIO.setmode(GPIO.BCM)
 
+db = MySQLDatabase("hvac2", host="localhost", port=3306, user="root", passwd="makeheat")
+
 
 class Thermostat(hvac.HVAC):
     
     def __init__(self):
         super().__init__() # initialize HVAC class
         
-        comfort_offset = 1 # additional offset on top of ASHREA
+        comfort_offset = 0.5 # additional offset on top of ASHREA. positive number means larger comfort zone
         PIR_PIN = 20
         self.LIGHT_PIN = 21
         self.TEMP_PIN = 4
-        
+
+        self.light = 0
+        self.humidity = 0
         self.STATUS_LED = 17
         self.target_state = "idle"
         self.active_hysteresis = 1.5
@@ -42,11 +46,6 @@ class Thermostat(hvac.HVAC):
 
         
     def run(self):
-        print("initializing db")
-        db = database.Database()
-        # print("initializing hvac")
-        # self.hvac_unit = hvac.HVAC()
-        
         while True:
             self.heartbeat()
 
@@ -54,18 +53,28 @@ class Thermostat(hvac.HVAC):
                 self.last_action = time.time()
                 self.reset_sensors()
                 self.get_temperature()
-        
-                if db.connected:
-                    db.store_sensors(temp=self.temperature, motion=self.motion, light=self.light)
-                    db.get_targets()
+
+                if db.connect(reuse_if_open=True):
+                    SensorData.create(temperature = self.temperature,
+                                      humidity = self.humidity,
+                                      motion = self.motion,
+                                      light = self.light)
+                    print("The target temp is now, ")
+                    print(ThermostatSet.select())
                     self.motion = 0
                 else:
-                    self.heartbeat()
                     self.fallback_mode()
 
-                self.set_state(self.target_state)
+                try:
+                    self.set_state(self.target_state)
+                except Exception as e:
+                    print("WARNING: Couldn't set state")
+                    print(e)
                 
                 self.log_status()
+                                      
+            time.sleep(3)
+                                
 
 
     def fallback_mode(self):
@@ -79,14 +88,18 @@ class Thermostat(hvac.HVAC):
         if self.current == "idle":
             if self.temperature < (T_min - self.inactive_hysteresis):
                 self.target_state = "heat"
-            if self.temperature > (T_max + self.inactive_hysteresis):
+            elif self.temperature > (T_max + self.inactive_hysteresis):
                 self.target_state = "cool"
+            else:
+                print("temperature is in comfort zone")
 
         else: # Active
-            if self.temperature < (T_max - self.active_hysteresis):
+            if self.temperature > T_min and self.temperature < (T_max - self.active_hysteresis):
                 self.target_state = "idle"
-            elif self.temperature > (T_min + self.active_hysteresis):
+                print("Active and temp is less than tmax - active hysteresis")
+            elif self.temperature < T_max and self.temperature > (T_min + self.active_hysteresis):
                 self.target_state = "idle"
+                print("Active and temp is greater than tmin + active hysteresis")
 
 
     def reset_sensors(self):
@@ -166,6 +179,7 @@ class Thermostat(hvac.HVAC):
     def log_status(self):
         print("Time: {}, temperature: {}".format(datetime.datetime.now(), self.temperature))
         print("Current State: {}, Target state: {}".format(self.current, self.target_state))
+        print("Comfort Zone: {}".format(self.comfort_zone))
         
 
 if __name__ == "__main__":

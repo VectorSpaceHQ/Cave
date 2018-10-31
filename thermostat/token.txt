@@ -2,6 +2,6 @@
 #mysqlHost=10.0.0.89
 mysqlHost=localhost
 mysqlUser=root
-mysqlpass=password
+mysqlpass=makeheat
 mysqldatabase=hvac
 mysqlport=3306
