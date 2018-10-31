@@ -54,7 +54,8 @@ class Thermostat(hvac.HVAC):
                 self.reset_sensors()
                 self.get_temperature()
 
-                if db.connect(reuse_if_open=True):
+                try:
+                    db.connect(reuse_if_open=True)
                     SensorData.create(temperature = self.temperature,
                                       humidity = self.humidity,
                                       motion = self.motion,
@@ -62,7 +63,8 @@ class Thermostat(hvac.HVAC):
                     print("The target temp is now, ")
                     print(ThermostatSet.select())
                     self.motion = 0
-                else:
+                except Exception as e:
+                    print("Smart mode not working:, {}".format(e))
                     self.fallback_mode()
 
                 try:
