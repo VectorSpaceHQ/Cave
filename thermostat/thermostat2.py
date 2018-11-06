@@ -186,5 +186,5 @@ class Thermostat(hvac.HVAC):
 
 if __name__ == "__main__":
     thermostat = Thermostat()
-    # print(thermostat.get_temperature())
+    print(thermostat.get_temperature())
     thermostat.run()

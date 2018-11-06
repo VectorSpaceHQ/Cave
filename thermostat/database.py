@@ -5,6 +5,13 @@ from peewee import *
 
 db = MySQLDatabase("hvac2", host="localhost", port=3306, user="root", passwd="makeheat")
 
+
+def get_sensor_data(db):
+    for entry in SensorData.select():
+        print(entry)
+    return SensorData.select()
+
+
 class newtable(Model):
     Temperature = FloatField()
     class Meta:
