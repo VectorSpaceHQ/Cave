@@ -87,8 +87,10 @@ if __name__ == "__main__":
     # if tables don't yet exist, create them
     db.create_tables([SystemLog, ModuleInfo, SensorData, ThermostatSet, ThermostatLog])
 
+    # Check all tables. If no entries, add one
+    print(len(SystemLog.Select()))
     # add rows
-    SystemLog.create(Toutside=50, lowTarget=60, highTarget=80, Poccupancy=1)
+    # SystemLog.create(Toutside=50, lowTarget=60, highTarget=80, Poccupancy=1)
     # ThermostatSet.create()
     # ThermostatLog.create()
     # SensorData.create()
