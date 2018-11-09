@@ -73,8 +73,14 @@ class Server():
 
 
     def read_sensors(self):
+        """
+        Read in sensor data and thermostat logs
+        """
+        
         db.connect(reuse_if_open = True)
         self.sensor_data = get_sensor_data()
+
+        self.current_mode = ThermostatLog().select()[-1].state
 
         # # example implementation
         # motionlist = [x.motion for x in self.sensor_data]
@@ -89,7 +95,7 @@ class Server():
 
         self.P_occupancy = 0 - 100%
         """
-        motion = [x.motion for x in self.sensor_data[:20]]
+        motion = [x.motion for x in self.sensor_data[-20:]]
         print(motion)
         self.P_occupancy = 100 * min((motion.count(1)**3) / len(motion), 1) # skew the count. the more counts, the more likely they're real
 
