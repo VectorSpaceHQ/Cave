@@ -13,7 +13,8 @@ import glob
 
 GPIO.setmode(GPIO.BCM)
 
-db = MySQLDatabase("hvac2", host="localhost", port=3306, user="root", passwd="makeheat")
+# db = MySQLDatabase("hvac", host="10.0.0.201", port=3306,
+                   # user="vectorspace", passwd="makeheat")
 
 
 class Thermostat(hvac.HVAC):
@@ -25,6 +26,8 @@ class Thermostat(hvac.HVAC):
         PIR_PIN = 20
         self.LIGHT_PIN = 21
         self.TEMP_PIN = 4
+        self.ID = 0
+        self.location = 'default'
 
         self.light = 0
         self.humidity = 0
@@ -56,12 +59,19 @@ class Thermostat(hvac.HVAC):
 
                 try:
                     db.connect(reuse_if_open=True)
-                    SensorData.create(temperature = self.temperature,
+                    SensorData.create(moduleID = self.ID,
+                                      location = self.location,
+                                      state = self.current,
+                                      temperature = round(self.temperature, 1),
                                       humidity = self.humidity,
                                       motion = self.motion,
                                       light = self.light)
-                    print("The target temp is now, ")
-                    print(ThermostatSet.select())
+                    
+                    self.target_temp = ThermostatSet.select()[-1].targetTemp
+                    self.target_state = ThermostatSet.select()[-1].targetMode
+                    print("The target temp is, {}".format(ThermostatSet.select()[-1].targetTemp))
+
+                    print("The target state is, {}".format(ThermostatSet.select()[-1].targetMode))
                     self.motion = 0
                 except Exception as e:
                     print("Smart mode not working:, {}".format(e))
@@ -85,7 +95,8 @@ class Thermostat(hvac.HVAC):
         T_min = self.comfort_zone[0]
         T_max = self.comfort_zone[1]
 
-        print(self.current, T_max, self.temperature)
+        print("current state: {}, Tmax: {}, current temp: {}".format(
+            self.current, T_max, self.temperature))
 
         if self.current == "idle":
             if self.temperature < (T_min - self.inactive_hysteresis):
@@ -182,9 +193,18 @@ class Thermostat(hvac.HVAC):
         print("Time: {}, temperature: {}".format(datetime.datetime.now(), self.temperature))
         print("Current State: {}, Target state: {}".format(self.current, self.target_state))
         print("Comfort Zone: {}".format(self.comfort_zone))
+        ThermostatLog.create(moduleID = self.ID,
+                             targetTemp = self.target_temp,
+                             actualTemp = self.temperature,
+                             state = self.current,
+                             coolOn = 0,
+                             heatOn = 0,
+                             fanOn = 0,
+                             auxOn = 0)
         
 
 if __name__ == "__main__":
     thermostat = Thermostat()
     print(thermostat.get_temperature())
+    # time.sleep(5)
     thermostat.run()

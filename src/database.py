@@ -3,7 +3,7 @@
 import datetime
 from peewee import *
 
-db = MySQLDatabase("hvac2", host="localhost", port=3306, user="root", passwd="makeheat")
+db = MySQLDatabase("hvac", host="10.0.0.201", port=3306, user="vectorspace", passwd="makeheat")
 
 
 def get_sensor_data(db):
@@ -31,7 +31,7 @@ class ModuleInfo(Model):
         database = db
         
 class SensorData(Model):
-    readingID = IntegerField()
+    readingID = PrimaryKeyField()
     timeStamp = DateTimeField(default=datetime.datetime.now)
     moduleID = IntegerField()
     location = CharField()
@@ -58,6 +58,7 @@ class ThermostatLog(Model):
     moduleID = IntegerField()
     targetTemp = FloatField()
     actualTemp = FloatField()
+    state = CharField()
     coolOn = IntegerField()
     heatOn = IntegerField()
     fanOn = IntegerField()
@@ -85,7 +86,7 @@ if __name__ == "__main__":
     db.create_tables([SystemLog, ModuleInfo, SensorData, ThermostatSet, ThermostatLog])
 
     # add rows
-    # SystemLog.create(Toutside=50, lowTarget=60, highTarget=80, Poccupancy=1)
+    SystemLog.create(Toutside=50, lowTarget=60, highTarget=80, Poccupancy=1)
     # ThermostatSet.create()
     # ThermostatLog.create()
     # SensorData.create()
