@@ -1,0 +1,5 @@
+# sudo pip3 install -r ./requirements.txt
+configparser
+peewee
+fysom
+pyowm
