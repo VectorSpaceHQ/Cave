@@ -3,12 +3,13 @@
 import datetime
 from peewee import *
 
-db = MySQLDatabase("hvac2", host="localhost", port=3306, user="root", passwd="makeheat")
+db = MySQLDatabase("hvac", host="localhost", port=3306, user="vectorspace", passwd="makeheat")
 
 
-def get_sensor_data(db):
-    for entry in SensorData.select():
-        print(entry)
+def get_sensor_data():
+    # for entry in SensorData.select():
+    #     print(entry.motion)
+        
     return SensorData.select()
 
 
@@ -58,6 +59,7 @@ class ThermostatLog(Model):
     moduleID = IntegerField()
     targetTemp = FloatField()
     actualTemp = FloatField()
+    state = CharField()
     coolOn = IntegerField()
     heatOn = IntegerField()
     fanOn = IntegerField()
@@ -73,7 +75,7 @@ class ThermostatSet(Model):
     targetTemp = FloatField()
     targetMode = CharField()
     expiryTime = DateTimeField()
-    entryNo = IntegerField()
+    entryNo = PrimaryKeyField()
     
     class Meta:
         database = db

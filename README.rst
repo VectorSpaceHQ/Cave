@@ -38,18 +38,19 @@ Install mysql server on the server.
 
 Install supporting packages.
 ::
-   sudo apt-get install python3-dev python3-pip python3-setuptools libmysqlclient-dev
+   sudo apt-get install python3-dev python3-pip python3-setuptools libmysqlclient-dev python3-mysql
 
-Generate the initial MySQL database.
+Generate the initial MySQL database manually, then run ./src/database.py to create the tables
 ::
-   cd server
-   ./generate_sqldb.sh mysqlusername password
+   mysql
+   CREATE DATABASE hvac;
+   ./src/database.py
 
 You can confirm that the hvac database was added to your mysql server, by loging in at http://localhost/phpmyadmin/
 
 Install required python packages.
 ::
-   sudo pip3 install -r ./server/requirements.txt
+   sudo pip3 install -r ./src/requirements.txt
 
 Install Mosquitto on the server for MQTT brokering.
 ::
