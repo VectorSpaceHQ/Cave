@@ -55,7 +55,7 @@ class Server():
             self.write_database()
             self.write_log()
             
-            time.sleep(30)
+            time.sleep(60)
 
         
     def get_weather(self):
@@ -73,6 +73,12 @@ class Server():
         self.T_out = w.get_temperature('fahrenheit')['temp']
         # self.H_out = w.get_humidity()
         print("outside temp = " + str(self.T_out))
+        
+        fc = owm.three_hours_forecast_at_id(4771099)
+        f = fc.get_forecast()
+        for w in f:
+            print(w.get_reference_time(timeformat='iso'), w.get_temperature('fahrenheit')['temp'])
+
 
 
     def read_sensors(self):
