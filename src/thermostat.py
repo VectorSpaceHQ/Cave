@@ -48,45 +48,6 @@ class Thermostat(hvac.HVAC):
                               callback=self.get_motion)
 
         
-    def run(self):
-        while True:
-            self.heartbeat()
-
-            if (time.time() - self.last_action) > 60: # 60 seconds
-                self.last_action = time.time()
-                self.reset_sensors()
-                self.get_temperature()
-
-                try:
-                    db.connect(reuse_if_open=True)
-                    SensorData.create(moduleID = self.ID,
-                                      location = self.location,
-                                      state = self.current,
-                                      temperature = round(self.temperature, 1),
-                                      humidity = self.humidity,
-                                      motion = self.motion,
-                                      light = self.light)
-                    
-                    self.target_temp = ThermostatSet.select()[-1].targetTemp
-                    self.target_state = ThermostatSet.select()[-1].targetMode
-                    print("The target temp is, {}".format(ThermostatSet.select()[-1].targetTemp))
-
-                    print("The target state is, {}".format(ThermostatSet.select()[-1].targetMode))
-                    self.motion = 0
-                except Exception as e:
-                    print("Smart mode not working:, {}".format(e))
-                    self.fallback_mode()
-
-                try:
-                    self.set_state(self.target_state)
-                except Exception as e:
-                    print("WARNING: Couldn't set state")
-                    print(e)
-                
-                self.log_status()
-                                      
-            time.sleep(3)
-                                
 
 
     def fallback_mode(self):
@@ -94,6 +55,7 @@ class Thermostat(hvac.HVAC):
         
         T_min = self.comfort_zone[0]
         T_max = self.comfort_zone[1]
+        self.target_temp = (T_min + T_max) / 2
 
         print("current state: {}, Tmax: {}, current temp: {}".format(
             self.current, T_max, self.temperature))
@@ -101,6 +63,7 @@ class Thermostat(hvac.HVAC):
         if self.current == "idle":
             if self.temperature < (T_min - self.inactive_hysteresis):
                 self.target_state = "heat"
+                self.target_temp = T_min + self.active_hysteresis
             elif self.temperature > (T_max + self.inactive_hysteresis):
                 self.target_state = "cool"
             else:
@@ -202,6 +165,50 @@ class Thermostat(hvac.HVAC):
                              fanOn = 0,
                              auxOn = 0)
         
+    def run(self):
+        while True:
+            self.heartbeat()
+
+            if (time.time() - self.last_action) > 60: # 60 seconds
+                self.last_action = time.time()
+                self.reset_sensors()
+                self.get_temperature()
+
+                try:
+                    db.connect(reuse_if_open=True)
+                    SensorData.create(moduleID = self.ID,
+                                      location = self.location,
+                                      state = self.current,
+                                      temperature = round(self.temperature, 1),
+                                      humidity = self.humidity,
+                                      motion = self.motion,
+                                      light = self.light)
+                    
+                    self.target_temp = ThermostatSet.select()[-1].targetTemp
+                    self.target_state = ThermostatSet.select()[-1].targetMode
+                    directive_time = ThermostatSet.select()[-1].timeStamp
+                    print("The target temp is, {}".format(ThermostatSet.select()[-1].targetTemp))
+                    print("The target state is, {}".format(ThermostatSet.select()[-1].targetMode))
+                    if (datetime.datetime.now() - directive_time).total_seconds() > 120:
+                        print("directive has expired, going into fallback mode")
+                        self.fallback_mode()
+                        
+                    self.motion = 0 # reset motion
+                except Exception as e:
+                    print("Smart mode not working:, {}".format(e))
+                    self.fallback_mode()
+
+                try:
+                    print("setting state")
+                    # self.set_state(self.target_state)
+                except Exception as e:
+                    print("WARNING: Couldn't set state")
+                    print(e)
+                
+                self.log_status()
+                                      
+            time.sleep(3)
+                                
 
 if __name__ == "__main__":
     thermostat = Thermostat()
