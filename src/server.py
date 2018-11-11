@@ -177,7 +177,7 @@ class Server():
         # time_list, id, target, actual, coolOn, heatOn, fanOn, auxOn = zip(*cooling_data)
         time_list = [x.timeStamp.timestamp() for x in self.sensor_data]
         T_actuals = [x.temperature for x in self.sensor_data]
-        self.temperature = T_actuals[0]
+        self.temperature = T_actuals[-1]
         
         dT = np.diff(T_actuals)
         dt = np.diff(time_list)
