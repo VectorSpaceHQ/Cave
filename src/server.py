@@ -20,6 +20,9 @@ class Server():
         self.T_out = 0
         self.comfort_zone = [71, 76.5]
         self.expire_time = 0
+        self.inactive_hysteresis = 1.0
+        self.active_hysteresis = 1.5
+        self.target_mode = "idle"        
 
         self.read_config()
 
@@ -98,7 +101,6 @@ class Server():
         motion = [x.motion for x in self.sensor_data[-20:]]
         print(motion)
         self.P_occupancy = 100 * min((motion.count(1)**3) / len(motion), 1) # skew the count. the more counts, the more likely they're real
-
 
         print("{}% chance there's someone here".format(self.P_occupancy))
 
@@ -202,6 +204,9 @@ class Server():
         T_min = self.comfort_zone[0]
         T_max = self.comfort_zone[1]
 
+        self.target_temp = (T_min + T_max) / 2
+
+
         if self.current_mode == "idle":
             if self.temperature < (T_min - self.inactive_hysteresis):
                 self.target_mode = "heat"
@@ -210,7 +215,7 @@ class Server():
                 self.target_mode = "cool"
                 self.target_temp = T_max - self.active_hysteresis
             else:
-                print("Temperature is in comfort zone")
+                print("Temperature of {:.1f} is in comfort zone".format(self.temperature))
 
         else: # Active
             if (self.temperature > T_min and
