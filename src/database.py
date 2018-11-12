@@ -4,7 +4,7 @@ import datetime
 from peewee import *
 
 
-db = MySQLDatabase("hvac", host="localhost", port=3306, user="vectorspace", passwd="makeheat")
+db = MySQLDatabase("hvac", host="10.0.0.201", port=3306, user="vectorspace", passwd="makeheat")
 
 
 def get_sensor_data():

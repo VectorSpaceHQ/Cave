@@ -136,13 +136,12 @@ class Thermostat(hvac.HVAC):
       while (GPIO.input(self.LIGHT_PIN) == GPIO.LOW):
           count += 1
 
-      if count < 100000:
+      print("light value = ", count)
+      # night no lights = 1,600,000
+      # day no lights = 25,000
+      if count < 10000:
           self.light = 1
           self.last_movement = time.time()
-
-
-    # def set_state(self, target_state):
-    #     hvac.setState(target_state)
 
 
     def heartbeat(self):
@@ -173,6 +172,7 @@ class Thermostat(hvac.HVAC):
                 self.last_action = time.time()
                 self.reset_sensors()
                 self.get_temperature()
+                self.get_light()
 
                 try:
                     db.connect(reuse_if_open=True)
@@ -199,8 +199,7 @@ class Thermostat(hvac.HVAC):
                     self.fallback_mode()
 
                 try:
-                    print("setting state")
-                    # self.set_state(self.target_state)
+                    self.set_state(self.target_state)
                 except Exception as e:
                     print("WARNING: Couldn't set state")
                     print(e)
