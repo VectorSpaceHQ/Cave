@@ -71,9 +71,8 @@ class HVAC(FysomGlobalMixin):
         except:
             print("FAILED")
 
-        print(time.time(), self.last_state_change, self.SAFETY_TIMER)
         if (time.time() - self.last_state_change) > self.SAFETY_TIMER:
-            
+            print("enough time has passed sinced last state change")
             self.last_state_change = time.time()
 
             print(self.current)
