@@ -78,9 +78,16 @@ class Server():
         fc = owm.three_hours_forecast_at_id(4771099)
         f = fc.get_forecast()
         for w in f:
-            # print(datetime.datetime.strptime(w.get_reference_time(timeformat='iso'),
-            #                                  "%Y-%m-%d %H:%M:%s+00") - datetime.datetime.strptime(now, "%Y-%m-%d %H:%M:%s+00"))
-            print(w.get_reference_time(timeformat='iso'), w.get_temperature('fahrenheit')['temp'])
+            timediff = datetime.datetime.strptime(w.get_reference_time(timeformat='iso'),
+                                             "%Y-%m-%d %H:%M:%S+00") - datetime.datetime.strptime(now, "%Y-%m-%d %H:%M:%S+00")
+            future_temp = w.get_temperature('fahrenheit')['temp']
+
+            if timediff.total_seconds() < 15000:
+                print("in {}, the outside temperature will be {}".format(timediff, future_temp))
+                if future_temp > self.comfort_zone[0] and future_temp < self.comfort_zone[1]:
+                    print("outside temperature will be in the comfort zone in {}. Deterimine if we should wait until enabling HVAC.".format(timediff))
+
+            # print(w.get_reference_time(timeformat='iso'), w.get_temperature('fahrenheit')['temp'])
 
 
 
@@ -166,7 +173,6 @@ class Server():
         if len(doy_data) > 0:
             print("n={} data points indicate a {}% probability of occupancy in the next hour for this day of the year.".format(len(doy_data), doy_data.count(1)/len(doy_data)))
 
-            
             
         # bins = np.linspace(0, 1, 10)
         # bin_means = (np.histogram(occ_probabilities, bins)[0] / np.histogram(data, bins)[0])
