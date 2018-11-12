@@ -71,12 +71,15 @@ class Server():
         w = observation.get_weather()
         # h = observation.get_humidity()
         self.T_out = w.get_temperature('fahrenheit')['temp']
+        now = w.get_reference_time(timeformat='iso')
         # self.H_out = w.get_humidity()
         print("outside temp = " + str(self.T_out))
         
         fc = owm.three_hours_forecast_at_id(4771099)
         f = fc.get_forecast()
         for w in f:
+            # print(datetime.datetime.strptime(w.get_reference_time(timeformat='iso'),
+            #                                  "%Y-%m-%d %H:%M:%s+00") - datetime.datetime.strptime(now, "%Y-%m-%d %H:%M:%s+00"))
             print(w.get_reference_time(timeformat='iso'), w.get_temperature('fahrenheit')['temp'])
 
 
@@ -105,7 +108,9 @@ class Server():
         self.P_occupancy = 0 - 100%
         """
         motion = [x.motion for x in self.sensor_data[-20:]]
-        print(motion)
+        light = [int(x.light) for x in self.sensor_data[-20:]]
+        indicators = [a or b  for a,b in zip(motion, light)]
+        print(indicators)
         self.P_occupancy = 100 * min((motion.count(1)**3) / len(motion), 1) # skew the count. the more counts, the more likely they're real
 
         print("{}% chance there's someone here".format(self.P_occupancy))
@@ -118,15 +123,54 @@ class Server():
 
         pull occupancy data from SystemLog
         create histogram by 30 min intervals
+
+        look at patterns on the same day of week
+        look at patterns on same day of month
+        look at patterns on same day of year
+
+        Weight these results week > month > year
         """
         self.calc_heat_rate()
+
+        d = datetime.datetime.now()
+        current_hour = d.hour
+        current_dow = d.weekday()
+        current_dom = d.day
+        current_doy = d.timetuple().tm_yday
+        # print(current_hour, current_dow, current_dom, current_doy)
         
         occ_probabilities = [x.Poccupancy for x in SystemLog.select()] # from systemlog
-        bins = np.linspace(0, 1, 10)
-        bin_means = (np.histogram(occ_probabilities, bins, weights=data)[0] / np.histogram(data, bins)[0])
-        
-        print(data[0])
-        print(bin_means)
+
+        dow_data = []
+        dom_data = []
+        doy_data = []
+    
+        for x in SystemLog.select():
+            timeStamp_unixtime = time.mktime(x.timeStamp.timetuple())
+            current_unixtime = time.mktime(datetime.datetime.now().timetuple())
+            timediff = timeStamp_unixtime - current_unixtime
+            
+            if timediff > 0 and timediff < 3600:
+                if x.timeStamp.weekday() == current_dow:
+                    dow_data.append(x.Poccupancy)
+                    print("matches dow ", x.timeStamp)
+                if x.timeStamp.day() == current_dom:
+                    dom_data.append(x.Poccupancy)
+                if x.timeStamp.timetuple().tm_yday == current_doy:
+                    doy_data.append(x.Poccupancy)
+
+        if len(dow_data) > 0:
+            print("n={} data points indicate a {}% probability of occupancy in the next hour for this day of the week.".format(len(dow_data), dow_data.count(1)/len(dow_data)))
+        if len(dom_data) > 0:
+            print("n={} data points indicate a {}% probability of occupancy in the next hour for this day of the month.".format(len(dom_data), dom_data.count(1)/len(dom_data)))
+        if len(doy_data) > 0:
+            print("n={} data points indicate a {}% probability of occupancy in the next hour for this day of the year.".format(len(doy_data), doy_data.count(1)/len(doy_data)))
+
+            
+            
+        # bins = np.linspace(0, 1, 10)
+        # bin_means = (np.histogram(occ_probabilities, bins)[0] / np.histogram(data, bins)[0])
+        # print(bin_means)
 
         
     def analyze_data(self):
