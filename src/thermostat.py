@@ -2,6 +2,7 @@
 # coding: utf-8
 
 from database import *
+from config import *
 import hvac
 import error
 
@@ -21,8 +22,11 @@ class Thermostat(hvac.HVAC):
     
     def __init__(self):
         super().__init__() # initialize HVAC class
+
+        config = configparser.ConfigParser()
+        config.read('config.cfg')
         
-        comfort_offset = 0.5 # additional offset on top of ASHREA. positive number means larger comfort zone
+        comfort_offset = int(config['thermostat']['comfort_offset'])
         PIR_PIN = 20
         self.LIGHT_PIN = 21
         self.TEMP_PIN = 4
@@ -133,13 +137,13 @@ class Thermostat(hvac.HVAC):
       GPIO.setup(self.LIGHT_PIN, GPIO.IN)
         
       #Count until the pin goes high                                                         
-      while (GPIO.input(self.LIGHT_PIN) == GPIO.LOW):
+      while (GPIO.input(self.LIGHT_PIN) == GPIO.LOW) and count < 100000:
           count += 1
 
       print("light value = ", count)
       # night no lights = 1,600,000
       # day no lights = 25,000
-      if count < 10000:
+      if count < 8000:
           self.light = 1
           self.last_movement = time.time()
 
@@ -156,8 +160,7 @@ class Thermostat(hvac.HVAC):
         print("Current State: {}, Target state: {}".format(self.current, self.target_state))
         print("Comfort Zone: {}".format(self.comfort_zone))
         ThermostatLog.create(moduleID = self.ID,
-                             targetTemp = self.target_temp,
-                             actualTemp = self.temperature,
+                             actualTemp = round(self.temperature,1),
                              state = self.current,
                              coolOn = 0,
                              heatOn = 0,
@@ -189,7 +192,7 @@ class Thermostat(hvac.HVAC):
                     directive_time = ThermostatSet.select()[-1].timeStamp
                     print("The target temp is, {}".format(ThermostatSet.select()[-1].targetTemp))
                     print("The target state is, {}".format(ThermostatSet.select()[-1].targetMode))
-                    if (datetime.datetime.now() - directive_time).total_seconds() > 120:
+                    if (datetime.datetime.now() - directive_time).total_seconds() > 360:
                         print("directive has expired, going into fallback mode")
                         self.fallback_mode()
                         
