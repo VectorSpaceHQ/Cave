@@ -73,6 +73,13 @@ Enable SPI and 1-Wire.
 > Advanced Options > Enable SPI and 1-Wire
 
 
+Services
+copy cave_server.service to /etc/systemd/system/ on the server
+copy cave_thermostat.service to /etc/systemd/system/ on the thermostat (RPi)
+
+enable both of these services on their respective machines using
+sudo systemctl enable cave_server.service
+sudo systemctl enable cave_thermostat.service
 
 
 Usage
