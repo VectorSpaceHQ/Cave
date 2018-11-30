@@ -18,7 +18,7 @@ db = MySQLDatabase("hvac", host="localhost", port=3306,
 class Server():
     def __init__(self):
         self.T_out = 0
-        self.comfort_zone = [71, 76.5]
+        self.comfort_zone = [71, 76.5] #ASHRAE
         self.expire_time = 0
         self.inactive_hysteresis = 1.0
         self.active_hysteresis = 1.5
@@ -33,11 +33,11 @@ class Server():
         print(abspath, dname)
         os.chdir(dname)
         config = configparser.ConfigParser()
-        config.read(dname+"/server.conf")
+        config.read(dname+"/config.cfg")
 
-        self.OUTSIDE_ID = config.get('main','WeatherModuleID')
-        self.OWM_APIKEY = config.get('main', 'OWM_APIKey')
-        self.LOCATION = config.get('main', 'Location')
+        self.OUTSIDE_ID = config.get('server','WeatherModuleID')
+        self.OWM_APIKEY = config.get('server', 'OWM_APIKey')
+        self.LOCATION = config.get('server', 'Location')
 
 
     def run(self):
@@ -47,7 +47,10 @@ class Server():
         """
         while True:
             self.read_config()
-            self.get_weather()
+            try:
+                self.get_weather()
+            except:
+                print("unable to get weather data")
             self.read_sensors()
             self.analyze_data()
             self.set_targets()
@@ -116,9 +119,10 @@ class Server():
         """
         motion = [x.motion for x in self.sensor_data[-20:]]
         light = [int(x.light) for x in self.sensor_data[-20:]]
-        indicators = [a or b  for a,b in zip(motion, light)]
-        print(indicators)
-        self.P_occupancy = 100 * min((motion.count(1)**3) / len(motion), 1) # skew the count. the more counts, the more likely they're real
+        combined = [a or b  for a,b in zip(motion, light)]
+        print(motion)
+        print(combined)
+        self.P_occupancy = 100 * min((combined.count(1)**2) / len(combined), 1) # skew the count. the more counts, the more likely they're real
 
         print("{}% chance there's someone here".format(self.P_occupancy))
 
@@ -227,11 +231,17 @@ class Server():
         # time_list, id, target, actual, coolOn, heatOn, fanOn, auxOn = zip(*cooling_data)
         time_list = [x.timeStamp.timestamp() for x in self.sensor_data]
         T_actuals = [x.temperature for x in self.sensor_data]
+        outside_temps = [x.Toutside for x in SystemLog.select()]
+
+
         self.temperature = T_actuals[-1]
         
         dT = np.diff(T_actuals)
         dt = np.diff(time_list)
         dTdt = (dT/dt)*3600
+        print(len(outside_temps))
+        print(len(dTdt))
+        np.polyfit(T_outside, dTdt, 2)
 
         # Given a dataset of thermostat temperature and an outdoor temperature,
         # Determine how long it typically take to reach target setpoint
@@ -290,7 +300,8 @@ class Server():
                   self.T_out < (T_max - self.active_hysteresis)):
                 
                 self.target_mode = "idle"
-                print("Outside temperature is in your comfort zone. Open the windows!")
+                print("Outside temperature ({}) is in your comfort zone. Open the windows!".format(self.T_out))
+                print(self.temperature, T_min, T_max)
 
 
     def write_database(self):
