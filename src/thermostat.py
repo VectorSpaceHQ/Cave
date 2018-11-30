@@ -4,7 +4,7 @@
 from database import *
 import hvac
 import error
-
+import os
 import subprocess
 import configparser
 import RPi.GPIO as GPIO
@@ -23,9 +23,11 @@ class Thermostat(hvac.HVAC):
     def __init__(self):
         super().__init__() # initialize HVAC class
 
+        abspath = os.path.abspath(__file__)
+        dname = os.path.dirname(abspath)
         config = configparser.ConfigParser()
-        config.read('config.cfg')
-        
+        config.read(dname+'/config.cfg')
+
         comfort_offset = float(config['thermostat']['comfort_offset'])
         PIR_PIN = 20
         self.LIGHT_PIN = 21

@@ -3,7 +3,7 @@ Description=Cave thermostat
 After=network.target
 
 [Service]
-ExecStart=/home/pi/Cave/src/server.py start
+ExecStart=/home/pi/Cave/src/thermostat.py start
 Restart=on-failure
 
 [Install]
