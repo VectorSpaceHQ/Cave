@@ -3,3 +3,6 @@ configparser
 peewee
 fysom
 pyowm
+numpy
+scipy
+pandas
