@@ -29,6 +29,10 @@ class Thermostat(hvac.HVAC):
         config.read(dname+'/config.cfg')
 
         comfort_offset = float(config['thermostat']['comfort_offset'])
+        light_sense = 0
+        temp_sense = 0
+        ID = 0
+        
         PIR_PIN = 20
         self.LIGHT_PIN = 21
         self.TEMP_PIN = 4
@@ -43,8 +47,10 @@ class Thermostat(hvac.HVAC):
         self.inactive_hysteresis = 1.0
         self.last_action = 0
         self.motion = 0
+        self.opmode = 'fallback'
         self.movement_timeout = 600
         self.last_movement = 0
+        self.last_beat = time.monotonic()
         self.comfort_zone = [71 - comfort_offset,
                              76.5 + comfort_offset]
 
@@ -53,23 +59,26 @@ class Thermostat(hvac.HVAC):
         GPIO.add_event_detect(PIR_PIN, GPIO.RISING,
                               callback=self.get_motion)
 
+
+        q = (ModuleInfo
+             .update({ModuleInfo.tempOffset: comfort_offset})
+                  .where(ModuleInfo.moduleID == ID))
+        q.execute()  # Execute the query.
         
 
 
     def fallback_mode(self):
         print("Entering Fallback mode")
-        
-        T_min = self.comfort_zone[0]
-        T_max = self.comfort_zone[1]
+        self.opmode = 'fallback'
+        T_min = self.comfort_zone[0] - comfort_offset
+        T_max = self.comfort_zone[1] + comfort_offset
         self.target_temp = (T_min + T_max) / 2
-
-        print("current state: {}, Tmax: {}, current temp: {}".format(
-            self.current, T_max, self.temperature))
 
         if self.current == "idle":
             if self.temperature < (T_min - self.inactive_hysteresis):
                 self.target_state = "heat"
                 self.target_temp = T_min + self.active_hysteresis
+                print("idle, heating, target = {}".format(self.target_temp))
             elif self.temperature > (T_max + self.inactive_hysteresis):
                 self.target_state = "cool"
             else:
@@ -79,11 +88,15 @@ class Thermostat(hvac.HVAC):
             if self.temperature > T_min and self.temperature < (T_max - self.active_hysteresis):
                 self.target_state = "idle"
                 print("Active and temp is less than tmax - active hysteresis")
+                print("active, idling, target = {}".format(self.target_temp))
+
             elif self.temperature < T_max and self.temperature > (T_min + self.active_hysteresis):
                 self.target_state = "idle"
                 print("Active and temp is greater than tmin + active hysteresis")
 
-
+        print("current state: {}, current temp: {}, target temp: {}, target state: {}".format(
+            self.current, self.temperature, self.target_temp, self.target_state))
+        
     def reset_sensors(self):
         if (time.time() - self.last_movement) > self.movement_timeout:
             self.last_movement = time.time()
@@ -112,7 +125,7 @@ class Thermostat(hvac.HVAC):
         if equals_pos != -1:
             temp_string = lines[1][equals_pos+2:]
             temp_c = float(temp_string) / 1000.0
-            temp_f = temp_c * 9.0 / 5.0 + 32.0
+            temp_f = round(temp_c * 9.0 / 5.0 + 32.0, 2)
             error.check_temp(temp_f)
 
         self.temperature = temp_f
@@ -151,12 +164,22 @@ class Thermostat(hvac.HVAC):
 
 
     def heartbeat(self):
-        if GPIO.input(self.STATUS_LED) == True:
-            GPIO.output(self.STATUS_LED, False)
-        else:
-            GPIO.output(self.STATUS_LED, True)
+        if time.monotonic() - self.last_beat > 10:
+            if self.opmode == 'smart':
+                print("smart opmode")
+                GPIO.output(self.STATUS_LED, True)
+                time.sleep(1)
+                GPIO.output(self.STATUS_LED, False)
+            elif self.opmode == 'fallback':
+                print("fallback opmode")
+                for i in range(3):
+                    GPIO.output(self.STATUS_LED, True)
+                    time.sleep(0.2)
+                    GPIO.output(self.STATUS_LED, False)
+                    time.sleep(0.1)
+            self.last_beat = time.monotonic()
 
-
+            
     def log_status(self):
         print("Time: {}, temperature: {}".format(datetime.datetime.now(), self.temperature))
         print("Current State: {}, Target state: {}".format(self.current, self.target_state))
@@ -188,17 +211,22 @@ class Thermostat(hvac.HVAC):
                                       humidity = self.humidity,
                                       motion = self.motion,
                                       light = self.light)
+                    print("sensor data added to DB")
+
+                    last_record = ThermostatSet.select().order_by(ThermostatSet.timeStamp.desc()).get()
+                    self.target_temp = last_record.targetTemp
+                    self.target_state = last_record.targetMode
+                    print("The target temp is, {}".format(self.target_temp))
+                    print("The target state is, {}".format(self.target_state))
                     
-                    self.target_temp = ThermostatSet.select()[-1].targetTemp
-                    self.target_state = ThermostatSet.select()[-1].targetMode
-                    directive_time = ThermostatSet.select()[-1].timeStamp
-                    print("The target temp is, {}".format(ThermostatSet.select()[-1].targetTemp))
-                    print("The target state is, {}".format(ThermostatSet.select()[-1].targetMode))
+                    directive_time = last_record.timeStamp
+
                     if (datetime.datetime.now() - directive_time).total_seconds() > 360:
                         print("directive has expired, going into fallback mode")
                         self.fallback_mode()
                         
                     self.motion = 0 # reset motion
+                    self.opmode = 'smart'
                 except Exception as e:
                     print("Smart mode not working:, {}".format(e))
                     self.fallback_mode()
