@@ -28,6 +28,7 @@ class ModuleInfo(Model):
     humiditySense = IntegerField()
     lightSense = IntegerField()
     motionSense = IntegerField()
+    tempOffset = FloatField()
 
     class Meta:
         database = db
@@ -75,6 +76,8 @@ class ThermostatSet(Model):
     moduleID = IntegerField()
     targetTemp = FloatField()
     targetMode = CharField()
+    offset = FloatField()
+    mode = CharField()
     expiryTime = DateTimeField()
     
     class Meta:
@@ -96,8 +99,8 @@ if __name__ == "__main__":
         SensorData.create(moduleID=0, location="none", temperature=70,
                           humidity=0, light=0, motion=0)
     if len(ThermostatSet.select()) == 0:
-        ThermostatSet.create(moduleID=0, targetTemp=70, targetMode="idle",
-                             expiryTime=0)
+        ThermostatSet.create(moduleID=0, targetTemp=70, targetMode="idle", offset=0,
+                             mode = "fallback", expiryTime=0)
     if len(ThermostatLog.select()) == 0:
         ThermostatLog.create(moduleID=0, actualTemp=70, state="idle",
                              coolOn=0, heatOn=0, fanOn=0, auxOn=0)

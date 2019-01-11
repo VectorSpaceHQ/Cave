@@ -15,7 +15,7 @@ def ready_for_change(e):
     Prevent cycling of the compressor by applying a minimum
     time to wait between state changes.
     """
-    SAFETY_TIMER = 200
+    SAFETY_TIMER = 500
     if (time.time() - last_state_change) > SAFETY_TIMER:
         print("Changing State")
         return True
@@ -84,6 +84,7 @@ class HVAC(FysomGlobalMixin):
                 GPIO.output(self.GREEN_PIN, True)
                 GPIO.output(self.AUX_PIN, False)
             elif self.current == "heat":
+                print("HEATING")
                 GPIO.output(self.ORANGE_PIN, False)
                 GPIO.output(self.YELLOW_PIN, True)
                 GPIO.output(self.GREEN_PIN, True)
@@ -99,6 +100,7 @@ class HVAC(FysomGlobalMixin):
                 GPIO.output(self.GREEN_PIN, True)
                 GPIO.output(self.AUX_PIN, True)
             elif self.current == "idle":
+                print("IDLE")
                 GPIO.output(self.ORANGE_PIN, False)
                 GPIO.output(self.YELLOW_PIN, False)
                 GPIO.output(self.GREEN_PIN, False)
