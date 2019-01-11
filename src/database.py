@@ -28,6 +28,7 @@ class ModuleInfo(Model):
     humiditySense = IntegerField()
     lightSense = IntegerField()
     motionSense = IntegerField()
+    tempOffset = FloatField()
 
     class Meta:
         database = db

@@ -254,8 +254,10 @@ class Server():
         As it becomes less likely that the space is occupied, the comfort zone grows.
         These equations are linear fits of Todd M's table.
         """
-        self.comfort_zone = [0.21 * self.P_occupancy + 50,
-                             -0.15 * self.P_occupancy + 91.5]
+        temp_offset = ModuleInfo.get(ModuleInfo.moduleID == 0).tempOffset
+        
+        self.comfort_zone = [0.21 * self.P_occupancy + 50 - temp_offset,
+                             -0.15 * self.P_occupancy + 91.5 + temp_offset]
         print("Setting comfort zone based on occupancy")
         print(self.comfort_zone)
 
