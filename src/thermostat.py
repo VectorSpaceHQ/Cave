@@ -136,6 +136,7 @@ class Thermostat(hvac.HVAC):
         """
         Callback function for PIR sensor
         """
+        print("movement detected")
         self.motion = 1
         self.last_movement = time.time()
 
@@ -156,15 +157,13 @@ class Thermostat(hvac.HVAC):
           count += 1
 
       print("light value = ", count)
-      # night no lights = 1,600,000
-      # day no lights = 25,000
-      if count < 8000:
+      if count < 4000:
           self.light = 1
           self.last_movement = time.time()
 
 
     def heartbeat(self):
-        if time.monotonic() - self.last_beat > 10:
+        if time.monotonic() - self.last_beat > 4:
             if self.opmode == 'smart':
                 print("smart opmode")
                 GPIO.output(self.STATUS_LED, True)

@@ -75,7 +75,7 @@ class HVAC(FysomGlobalMixin):
             print("enough time has passed sinced last state change")
             self.last_state_change = time.time()
 
-            print(self.current)
+            print("setting state, current state = {}".format(self.current))
             
             if self.is_state("cool"):
                 print("COOLING")
