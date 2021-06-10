@@ -143,6 +143,12 @@ Below is a wiring diagram for a Raspberry Pi zero with a temperature sensor, PIR
 .. image:: ext/thermostat_schematic_bb.png
            :align: center
 
+** Standard thermostat pins
+*** Honeywell TH6320U2008
+pin spacing of 5mm (https://www.mouser.com/ProductDetail/845-30.359), 1.3mm diameter. two 8 pin columns separated by 44.4mm (1.75in)
+*** Honeywell TH5320U1001
+pin spacing of 5mm (https://www.mouser.com/ProductDetail/845-30.359), 1.3mm diameter. One 9 pin column.
+
 
 HVAC 101
 =======
@@ -150,7 +156,7 @@ The following HVAC information is coppied directly from, https://github.com/Will
 
 HVAC 101
 
-HVAC (heating, ventilating, and air conditioning) can be implemented in different ways within a house or apartment, and varies for different countries based on the wiring and such. I'm not an expert in HVAC systems, I pretty much just learned enough to get by for this project, but here's a pretty useful guide: http://wiki.xtronics.com/index.php/Thermostat_signals_and_wiring
+HVAC (heating, ventilating, and air conditioning) can be implemented in different ways within a house or apartment, and varies for different countries based on the wiring and such. I'm not an expert in HVAC systems, I pretty much just learned enough to get by for this project, but here's a pretty useful guide: https://lrak.net/wiki/Thermostat_signals_and_wiring.html
 
 My particular apartment uses a heat pump, which uses the very same compressor action for the air conditioner. The only difference is the air flow. This makes it possible to, in my case, use four wires from the HVAC panel behind the original thermostat for this project:
 

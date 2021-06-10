@@ -74,6 +74,7 @@ class Server():
         w = observation.get_weather()
         # h = observation.get_humidity()
         self.T_out = w.get_temperature('fahrenheit')['temp']
+        self.radiative_heat = 3 # placeholder for an additive radiation value. Might be able to query this from a RealFeel value
         now = w.get_reference_time(timeformat='iso')
         # self.H_out = w.get_humidity()
         print("outside temp = " + str(self.T_out))
@@ -296,10 +297,10 @@ class Server():
                 self.target_mode = "idle"
                 print("active and temp is low but greater than tmin + active hysteresis")
                 
-            elif (self.temperature < T_min and
-                  self.T_out > (T_min + self.active_hysteresis)
-                  or self.temperature > T_max and
-                  self.T_out < (T_max - self.active_hysteresis)):
+            elif ((self.temperature < T_min and
+                  self.T_out + self.radiative_heat > T_min)
+                  or (self.temperature > T_max and
+                  self.T_out + self.radiative_heat < T_max)):
                 
                 self.target_mode = "idle"
                 print("Outside temperature ({}) is in your comfort zone. Open the windows!".format(self.T_out))
