@@ -60,18 +60,22 @@ class Thermostat(hvac.HVAC):
                               callback=self.get_motion)
 
 
-        q = (ModuleInfo
-             .update({ModuleInfo.tempOffset: comfort_offset})
-                  .where(ModuleInfo.moduleID == ID))
-        q.execute()  # Execute the query.
+        try:
+            q = (ModuleInfo
+                 .update({ModuleInfo.tempOffset: comfort_offset})
+                 .where(ModuleInfo.moduleID == ID))
+            q.execute()  # Execute the query.
+        except Exception as e:
+            print("Warning: no connection to database")
+
         
 
 
     def fallback_mode(self):
         print("Entering Fallback mode")
         self.opmode = 'fallback'
-        T_min = self.comfort_zone[0] - comfort_offset
-        T_max = self.comfort_zone[1] + comfort_offset
+        T_min = self.comfort_zone[0]
+        T_max = self.comfort_zone[1]
         self.target_temp = (T_min + T_max) / 2
 
         if self.current == "idle":
@@ -183,13 +187,17 @@ class Thermostat(hvac.HVAC):
         print("Time: {}, temperature: {}".format(datetime.datetime.now(), self.temperature))
         print("Current State: {}, Target state: {}".format(self.current, self.target_state))
         print("Comfort Zone: {}".format(self.comfort_zone))
-        ThermostatLog.create(moduleID = self.ID,
-                             actualTemp = round(self.temperature,1),
-                             state = self.current,
-                             coolOn = 0,
-                             heatOn = 0,
-                             fanOn = 0,
-                             auxOn = 0)
+
+        try:
+            ThermostatLog.create(moduleID = self.ID,
+                                 actualTemp = round(self.temperature,1),
+                                 state = self.current,
+                                 coolOn = 0,
+                                 heatOn = 0,
+                                 fanOn = 0,
+                                 auxOn = 0)
+        except:
+            print("No connection to DB. Skipping log")
         
     def run(self):
         while True:
