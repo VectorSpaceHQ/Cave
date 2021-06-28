@@ -3,7 +3,7 @@ import RPi.GPIO as GPIO
 import time
 
 GPIO.setmode(GPIO.BCM)
-light_PIN = 21
+light_PIN = 6
 
 def rc_time (light_PIN):
     count = 0
