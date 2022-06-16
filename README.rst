@@ -44,6 +44,7 @@ Generate the initial MySQL database manually, then run ./src/database.py to crea
 ::
    mysql
    CREATE DATABASE hvac;
+   quit
    ./src/database.py
 
 You can confirm that the hvac database was added to your mysql server, by loging in at http://localhost/phpmyadmin/

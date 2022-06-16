@@ -14,8 +14,8 @@ import glob
 
 GPIO.setmode(GPIO.BCM)
 
-# db = MySQLDatabase("hvac", host="10.0.0.201", port=3306,
-                   # user="vectorspace", passwd="makeheat")
+db = MySQLDatabase("hvac", host="10.0.0.201", port=3306,
+                   user="vectorspace", passwd="makeheat")
 
 
 class Thermostat(hvac.HVAC):
@@ -33,8 +33,8 @@ class Thermostat(hvac.HVAC):
         temp_sense = 0
         ID = 0
         
-        PIR_PIN = 20
-        self.LIGHT_PIN = 21
+        PIR_PIN = 23
+        self.LIGHT_PIN = 6
         self.TEMP_PIN = 4
         self.ID = 0
         self.location = 'default'
@@ -42,6 +42,7 @@ class Thermostat(hvac.HVAC):
         self.light = 0
         self.humidity = 0
         self.STATUS_LED = 17
+
         self.target_state = "idle"
         self.active_hysteresis = 1.5
         self.inactive_hysteresis = 1.0
@@ -162,14 +163,14 @@ class Thermostat(hvac.HVAC):
 
       print("light value = ", count)
       if count < 4000:
-          self.light = 1
+          print("Lights are on, room is occupied")
+          self.light = 1 # lights are on
           self.last_movement = time.time()
 
 
     def heartbeat(self):
         if time.monotonic() - self.last_beat > 4:
             if self.opmode == 'smart':
-                print("smart opmode")
                 GPIO.output(self.STATUS_LED, True)
                 time.sleep(1)
                 GPIO.output(self.STATUS_LED, False)
@@ -204,6 +205,7 @@ class Thermostat(hvac.HVAC):
             self.heartbeat()
 
             if (time.time() - self.last_action) > 60: # 60 seconds
+                print()
                 self.last_action = time.time()
                 self.reset_sensors()
                 self.get_temperature()
@@ -240,6 +242,7 @@ class Thermostat(hvac.HVAC):
 
                 try:
                     self.set_state(self.target_state)
+                    self.get_state()
                 except Exception as e:
                     print("WARNING: Couldn't set state")
                     print(e)
@@ -252,11 +255,9 @@ class Thermostat(hvac.HVAC):
 
 if __name__ == "__main__":
     thermostat = Thermostat()
-    print(thermostat.get_temperature())
-    # time.sleep(5)
     try:
         thermostat.run()
     finally:
         hvac_controller = hvac.HVAC()
-        hvac_controller.set_state("idle")
+        hvac_controller.turn_off()
 

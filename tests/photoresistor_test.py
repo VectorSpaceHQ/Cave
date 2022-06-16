@@ -1,4 +1,5 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
+# coding: utf-8
 import RPi.GPIO as GPIO
 import time
 
@@ -20,9 +21,13 @@ def rc_time (light_PIN):
     while (GPIO.input(light_PIN) == GPIO.LOW):
         count += 1
 
+        if count > 1E5:
+            return count
+
     return count
 
-    #Catch when script is interrupted, cleanup correctly
+
+#Catch when script is interrupted, cleanup correctly
 try:
     # Main loop
     while True:
